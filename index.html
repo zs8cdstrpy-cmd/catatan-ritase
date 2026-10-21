@@ -1,0 +1,1291 @@
+<title>Catatan Ritase</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0B6A73">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: satu kolom sempit (maks 760px) seperti buku catatan sopir. Header menempel di atas, navigasi tab menempel di bawah. */
+:root {
+  --bg: #EDF0F0;
+  --card: #FFFFFF;
+  --card-2: #F5F7F7;
+  --line: #D3DADB;
+  --ink: #13262B;
+  --muted: #566A70;
+  --accent: #0B6A73;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DCEFF0;
+  --warn: #9A5B00;
+  --warn-soft: #FFF1D1;
+  --bad: #B3261E;
+  --bad-soft: #FCE4E1;
+  --good: #1B7A47;
+  --good-soft: #DDF1E5;
+  --shadow: 0 1px 2px rgba(19,38,43,.06), 0 4px 14px rgba(19,38,43,.06);
+  --f-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  --f-body: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1A1D; --card: #162428; --card-2: #1C2D32; --line: #2A3E44; --ink: #E7EFF0; --muted: #94AAB0;
+    --accent: #55C6CE; --accent-ink: #062226; --accent-soft: #173A3E;
+    --warn: #F2B85B; --warn-soft: #3A2D12; --bad: #FF8F85; --bad-soft: #3F1B18; --good: #6FD39A; --good-soft: #14341F;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1A1D; --card: #162428; --card-2: #1C2D32; --line: #2A3E44; --ink: #E7EFF0; --muted: #94AAB0;
+  --accent: #55C6CE; --accent-ink: #062226; --accent-soft: #173A3E;
+  --warn: #F2B85B; --warn-soft: #3A2D12; --bad: #FF8F85; --bad-soft: #3F1B18; --good: #6FD39A; --good-soft: #14341F;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--f-body); font-size: 16px; line-height: 1.45;
+  padding-block: 0 88px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.wrap { max-width: 760px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 700; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* header */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--bg); padding-block: 12px 10px; border-bottom: 1px solid var(--line);
+  margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand h1 { font-size: 26px; line-height: 1; white-space: nowrap; }
+.brand p { margin: 3px 0 0; font-size: 13px; color: var(--muted); }
+.brand { min-width: 0; }
+.sync { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.sync.ok { color: var(--good); } .sync.err { color: var(--bad); }
+
+/* tabs */
+.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--card); border-top: 1px solid var(--line);
+  padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+}
+.tabs .wrap { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; }
+.tab { background: none; border: 0; padding: 7px 2px 5px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--muted); font-size: 12px; font-weight: 600; border-radius: 10px; min-width: 0; }
+.tab svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tab[aria-selected="true"] { color: var(--accent); background: var(--accent-soft); }
+
+main { padding-block: 16px 0; display: flex; flex-direction: column; gap: 14px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); min-width: 0; }
+.flat { background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 440px) { .grid2.stack { grid-template-columns: 1fr; } }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.sec-title { font-size: 20px; margin-bottom: 8px; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+/* form controls */
+label.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: var(--muted); min-width: 0; }
+input, select, textarea {
+  width: 100%; min-width: 0; min-height: 46px; padding: 9px 12px; background: var(--card); color: var(--ink);
+  border: 1.5px solid var(--line); border-radius: 10px; font-size: 16px; font-weight: 500;
+}
+select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 18px) 55%, calc(100% - 12px) 55%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 32px; text-overflow: ellipsis; }
+input:focus, select:focus { border-color: var(--accent); }
+input.warn { border-color: var(--warn); background: var(--warn-soft); }
+.btn { min-height: 44px; padding: 8px 16px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.danger { color: var(--bad); }
+.lockbadge { font-size: 11px; font-weight: 600; color: var(--muted, #566A70); background: var(--soft, #DCEFF0); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
+input.locked { opacity: .75; cursor: not-allowed; }
+.btn.sm { min-height: 36px; padding: 4px 12px; font-size: 14px; }
+.btn:disabled { opacity: .5; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; padding: 3px; gap: 3px; }
+.seg button { border: 0; background: none; border-radius: 9px; min-height: 42px; font-weight: 600; color: var(--muted); padding: 4px 6px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+/* pills */
+.pill { display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: var(--card-2); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+.pill.good { background: var(--good-soft); color: var(--good); border-color: transparent; }
+.pill.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.pill.bad { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
+
+/* day bar */
+.daybar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.daybar h2 { font-size: 30px; line-height: 1.05; }
+.daybar .nav { display: flex; gap: 8px; }
+.icon-btn { width: 44px; height: 44px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); display: grid; place-items: center; }
+.icon-btn svg { width: 20px; height: 20px; stroke: var(--ink); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.strip { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px; scroll-snap-type: x proximity; scrollbar-width: thin; }
+.chip { flex: 0 0 auto; scroll-snap-align: center; width: 54px; padding: 7px 0 6px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1.1; }
+.chip .wd { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.chip .dn { font-family: var(--f-display); font-size: 22px; font-weight: 700; }
+.chip .rt { font-size: 11px; font-weight: 700; min-height: 15px; color: var(--muted); }
+.chip.has .rt { color: var(--good); }
+.chip.today { border-color: var(--accent); }
+.chip[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip[aria-current="true"] .wd, .chip[aria-current="true"] .rt { color: var(--accent-ink); opacity: .9; }
+
+/* slot */
+.slot { display: flex; flex-direction: column; gap: 10px; }
+.slot-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.slot-head h3 { font-size: 22px; }
+.result { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--card-2); border: 1px solid var(--line); flex-wrap: wrap; }
+.result .km { font-family: var(--f-display); font-weight: 700; font-size: 34px; line-height: 1; }
+.result .km small { font-size: 15px; font-weight: 600; color: var(--muted); margin-left: 4px; }
+.result .route { font-size: 14px; color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+.diff { display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; font-size: 13px; font-weight: 600; color: var(--muted); min-width: 0; }
+.diff b { font-family: var(--f-display); font-size: 24px; line-height: 1.1; color: var(--ink); }
+.diff.neg b { color: var(--bad); } .diff.pos b { color: var(--good); }
+.note-warn { font-size: 14px; padding: 10px 12px; border-radius: 10px; background: var(--warn-soft); color: var(--warn); font-weight: 500; }
+
+/* summaries */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.tile { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 2px; box-shadow: var(--shadow); }
+.tile .lbl { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.tile .val { font-family: var(--f-display); font-size: 34px; font-weight: 700; line-height: 1.05; }
+.tile .sub { font-size: 13px; color: var(--muted); }
+.tile.neg .val { color: var(--bad); } .tile.pos .val { color: var(--good); }
+
+.bars { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.bar { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: baseline; }
+.bar .nm { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.bar .ct { font-family: var(--f-display); font-size: 24px; font-weight: 700; line-height: 1; }
+.bar .ct small { font-family: var(--f-body); font-size: 12px; color: var(--muted); font-weight: 500; margin-left: 3px; }
+.bar .track { grid-column: 1 / -1; height: 8px; border-radius: 99px; background: var(--card-2); border: 1px solid var(--line); overflow: hidden; }
+.bar .fill { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+.bar.bd .fill { background: var(--warn); }
+.bar .meta { grid-column: 1 / -1; font-size: 13px; color: var(--muted); margin-top: -2px; }
+
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { padding: 8px 10px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); background: var(--card-2); }
+th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--card); z-index: 1; font-weight: 600; }
+th:first-child { background: var(--card-2); }
+tr:last-child td { border-bottom: 0; }
+td.zero { color: var(--line); }
+tfoot td { font-weight: 700; background: var(--card-2); }
+.mx input { min-height: 38px; padding: 4px 6px; width: 78px; text-align: center; font-size: 14px; border-radius: 8px; }
+
+/* locations */
+.loc-list { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.loc { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.loc:last-child { border-bottom: 0; }
+.loc .nm { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.loc .sub { font-size: 13px; color: var(--muted); }
+.loc .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.editbox { width: 100%; display: flex; flex-direction: column; gap: 10px; padding: 12px; background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; margin-top: 6px; }
+.distlist { display: grid; grid-template-columns: 1fr 110px; gap: 8px 10px; align-items: center; }
+.distlist span { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.distlist input { min-height: 40px; text-align: right; }
+
+/* gaji */
+.pay { display: flex; flex-direction: column; }
+.pay .ln { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px dashed var(--line); align-items: baseline; }
+.pay .ln span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.pay .ln.sum { font-weight: 700; border-bottom: 1px solid var(--line); }
+.pay .ln.big { border: 0; padding-top: 14px; }
+.pay .ln.big span:last-child { font-family: var(--f-display); font-size: 34px; font-weight: 700; color: var(--accent); }
+.pay h3 { font-size: 15px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-family: var(--f-body); font-weight: 700; margin: 12px 0 0; }
+
+/* help */
+.steps { counter-reset: s; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 34px 1fr; gap: 12px; }
+.steps li::before { content: counter(s); font-family: var(--f-display); font-weight: 700; font-size: 20px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); }
+.steps h3 { font-size: 19px; margin-bottom: 2px; }
+.steps p { margin: 0; color: var(--muted); font-size: 15px; }
+.rules { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
+code.k { background: var(--card-2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: 14px; }
+
+.empty { text-align: center; padding: 22px 12px; color: var(--muted); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(86px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 99px; font-weight: 600; font-size: 14px; z-index: 50; max-width: calc(100% - 32px); }
+@media (prefers-reduced-motion: no-preference) { .fill { transition: width .3s ease; } }
+</style>
+
+<header class="top"><div class="wrap">
+  <div class="brand"><h1>Catatan Ritase</h1><p id="sub">Driver Dump Truck</p></div>
+  <span class="sync" id="sync" role="status">Memuat…</span>
+</div></header>
+<div class="wrap"><main id="view" aria-live="polite"></main></div>
+<nav class="tabs" aria-label="Menu utama"><div class="wrap" id="tabs"></div></nav>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+'use strict';
+var DEFAULT_LOC = {
+  loadings: [
+    { name: "Parkiran Tofu", abs: 68 },
+    { name: "TOS04 STM", abs: 69.5 },
+    { name: "TOS11 STM", abs: 69.9 },
+    { name: "TOS13 Bawah", abs: 70.5 },
+    { name: "TOS13 Ext", abs: 70.8 },
+    { name: "Grizzly", abs: 71 },
+    { name: "TOS15 A", abs: 72.1 },
+    { name: "TOS15 B", abs: 72.5 },
+    { name: "TOS16 SMA", abs: 68.5 },
+    { name: "TOS02 SMA", abs: 71.5 },
+    { name: "TOS6 PP", abs: 41 },
+    { name: "Parkiran KR", abs: 38 },
+    { name: "Lanjutan BD", abs: "" }
+  ],
+  dumpings: [
+    { name: "POS12", abs: 27 },
+    { name: "FENI", abs: 14.2 },
+    { name: "Parkiran KR", abs: 38 },
+    { name: "TOS6", abs: "" },
+    { name: "Parkiran Tofu", abs: 68 }
+  ],
+  dist: [
+    { l: "Parkiran Tofu", d: "POS12", km: 43 },
+    { l: "Parkiran Tofu", d: "FENI", km: 53.8 },
+    { l: "Parkiran Tofu", d: "Parkiran Tofu", km: 0 },
+    { l: "TOS04 STM", d: "POS12", km: 43.2 },
+    { l: "TOS04 STM", d: "FENI", km: 55.3 },
+    { l: "TOS04 STM", d: "Parkiran Tofu", km: 1.5 },
+    { l: "TOS11 STM", d: "POS12", km: 43.6 },
+    { l: "TOS11 STM", d: "FENI", km: 55.7 },
+    { l: "TOS11 STM", d: "Parkiran Tofu", km: 1.9 },
+    { l: "TOS13 Bawah", d: "POS12", km: 44.2 },
+    { l: "TOS13 Bawah", d: "FENI", km: 55 },
+    { l: "TOS13 Bawah", d: "Parkiran Tofu", km: 2.5 },
+    { l: "TOS13 Ext", d: "POS12", km: 44.5 },
+    { l: "TOS13 Ext", d: "FENI", km: 56.6 },
+    { l: "TOS13 Ext", d: "Parkiran Tofu", km: 2.8 },
+    { l: "Grizzly", d: "POS12", km: 44.7 },
+    { l: "Grizzly", d: "FENI", km: 56.8 },
+    { l: "Grizzly", d: "Parkiran Tofu", km: 3 },
+    { l: "TOS15 A", d: "POS12", km: 45.8 },
+    { l: "TOS15 A", d: "FENI", km: 57.9 },
+    { l: "TOS15 A", d: "Parkiran Tofu", km: 4.1 },
+    { l: "TOS15 B", d: "POS12", km: 46.2 },
+    { l: "TOS15 B", d: "FENI", km: 58.3 },
+    { l: "TOS15 B", d: "Parkiran Tofu", km: 4.5 },
+    { l: "TOS16 SMA", d: "POS12", km: 42.2 },
+    { l: "TOS16 SMA", d: "FENI", km: 54.3 },
+    { l: "TOS16 SMA", d: "Parkiran Tofu", km: 0.5 },
+    { l: "TOS02 SMA", d: "POS12", km: 45.2 },
+    { l: "TOS02 SMA", d: "FENI", km: 55 },
+    { l: "TOS02 SMA", d: "Parkiran KR", km: 33.5 },
+    { l: "TOS02 SMA", d: "Parkiran Tofu", km: 3.5 },
+    { l: "TOS6 PP", d: "POS12", km: 14.4 },
+    { l: "TOS6 PP", d: "FENI", km: 26.8 },
+    { l: "TOS6 PP", d: "Parkiran KR", km: 3 },
+    { l: "TOS6 PP", d: "Parkiran Tofu", km: 27 },
+    { l: "Parkiran KR", d: "POS12", km: 11 },
+    { l: "Parkiran KR", d: "TOS6", km: 3 },
+    { l: "Parkiran KR", d: "Parkiran Tofu", km: 30 }
+  ]
+};
+var CONTRACT = {
+  nama: "Dennis Johannes Martin Rompas",
+  nip: "CKB-WBN-C952",
+  fixed: {
+    jabatan: "Driver Dump Truck",
+    lokasi: "PT. Weda Bay Nickel, Halmahera Tengah, Maluku Utara",
+    poh: "Manado",
+    status: "PKWT (kontrak 24 Agu - 23 Nov 2026)",
+    tarif: 2566,
+    gp: 3721423,
+    insentif: 500000,
+    onsite: 30000,
+    hariBulan: 28,
+    bpjsKes: 1,
+    bpjsTk: 2,
+    pph: 2.52
+  }
+};
+var LOCKED = ['jabatan', 'lokasi', 'poh', 'status', 'tarif', 'insentif', 'onsite', 'hariBulan', 'bpjsKes', 'bpjsTk'];
+function applyContract(st) {
+  LOCKED.forEach(function (k) { st[k] = CONTRACT.fixed[k]; });
+  if (!st.nama && CONTRACT.nama) st.nama = CONTRACT.nama;
+  if (!st.nip && CONTRACT.nip) st.nip = CONTRACT.nip;
+  return st;
+}
+var BD = '__BD__', BD_LABEL = 'BD di jalan', LJB = 'Lanjutan BD';
+var $ = function (s, r) { return (r || document).querySelector(s); };
+var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function isNum(v) { return v !== '' && v != null && !isNaN(+v); }
+function r2(n) { return Math.round(n * 100) / 100; }
+var nfKm = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+var nfInt = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 });
+function km(n) { return nfKm.format(r2(n)); }
+function rp(n) { return (n < 0 ? '-' : '') + 'Rp ' + nfInt.format(Math.abs(Math.round(n))); }
+
+/* ---------- tanggal & periode ---------- */
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+function iso(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function todayStr() { return iso(new Date()); }
+function dim(y, m) { return new Date(y, m + 1, 0).getDate(); }
+function clampDay(y, m, day) { return Math.min(Math.max(1, +day || 1), dim(y, m)); }
+function periodEndFor(startISO, closeDay) {
+  var p = String(startISO).split('-'), y = +p[0], m = +p[1] - 1, sd = +p[2];
+  if (+closeDay >= sd) return iso(new Date(y, m, clampDay(y, m, closeDay)));
+  var n = new Date(y, m + 1, 1); return iso(new Date(n.getFullYear(), n.getMonth(), clampDay(n.getFullYear(), n.getMonth(), closeDay)));
+}
+function startForDate(date, openDay) {
+  var y = date.getFullYear(), m = date.getMonth(), c = new Date(y, m, clampDay(y, m, openDay));
+  if (c <= date) return iso(c);
+  var pm = new Date(y, m - 1, 1); return iso(new Date(pm.getFullYear(), pm.getMonth(), clampDay(pm.getFullYear(), pm.getMonth(), openDay)));
+}
+function newPeriod(start, closeDay) { return { start: start, end: periodEndFor(start, closeDay), closed: false, hkOverride: '', travel: '', potLain: '', pphNominal: '', days: {} }; }
+
+/* ---------- state ---------- */
+/* migrasi data v3: satukan nama Parkiran Tofu, hapus dumping TOS6, lengkapi matriks jarak */
+var MIG3_FILL = [['Parkiran Tofu', 'Parkiran KR', 30], ['TOS04 STM', 'Parkiran KR', 31.5], ['TOS11 STM', 'Parkiran KR', 31.9], ['TOS13 Bawah', 'Parkiran KR', 32.5], ['TOS13 Ext', 'Parkiran KR', 32.8], ['Grizzly', 'Parkiran KR', 33], ['TOS15 A', 'Parkiran KR', 34.1], ['TOS15 B', 'Parkiran KR', 34.5], ['TOS16 SMA', 'Parkiran KR', 30.5], ['TOS02 SMA', 'Parkiran KR', 33.5], ['TOS6 PP', 'Parkiran KR', 3], ['Parkiran KR', 'Parkiran KR', 0], ['Parkiran KR', 'POS12', 11], ['Parkiran KR', 'FENI', 23.8], ['Parkiran Tofu', 'POS12', 43], ['Parkiran Tofu', 'FENI', 53.8], ['Parkiran Tofu', 'Parkiran Tofu', 0], ['Parkiran KR', 'Parkiran Tofu', 30]];
+var MIG3_ABS = { 'POS12': 27, 'FENI': 14.2, 'Parkiran KR': 38, 'Parkiran Tofu': 68 };
+function migrate3(o) {
+  var usedL = {}, usedD = {};
+  Object.keys(o.periods).forEach(function (pk) { var p = o.periods[pk]; Object.keys(p.days || {}).forEach(function (k) { (p.days[k].slots || []).forEach(function (s) { if (s.l) usedL[s.l] = 1; if (s.d) usedD[s.d] = 1; if (s.lj) usedD[s.lj] = 1; }); }); });
+  function renameList(list, from, to, keyIn) {
+    var iF = -1, iT = -1;
+    list.forEach(function (x, i) { if (x.name === from) iF = i; if (x.name === to) iT = i; });
+    if (iF < 0) return;
+    if (iT >= 0) list.splice(iF, 1); else list[iF].name = to;
+    o.dist.forEach(function (x) { if (x[keyIn] === from) x[keyIn] = '\u0000' + to; });
+    Object.keys(o.periods).forEach(function (pk) { var p = o.periods[pk]; Object.keys(p.days || {}).forEach(function (k) { (p.days[k].slots || []).forEach(function (s) {
+      if (keyIn === 'l' && s.l === from) s.l = to;
+      if (keyIn === 'd') { if (s.d === from) s.d = to; if (s.lj === from) s.lj = to; }
+    }); }); });
+  }
+  renameList(o.loadings, 'Gantungan 0KM', 'Parkiran Tofu', 'l');
+  renameList(o.dumpings, 'Parkiran Tofu/Gantungan', 'Parkiran Tofu', 'd');
+  // hapus tanda sementara; bila pasangan sudah ada, pakai yang lama (milik nama tujuan)
+  var seen = {}, keep = [];
+  o.dist.forEach(function (x) { if (typeof x.l === 'string' && x.l.charAt(0) !== '\u0000' && typeof x.d === 'string' && x.d.charAt(0) !== '\u0000') seen[x.l + '|' + x.d] = 1; });
+  o.dist.forEach(function (x) {
+    var l = String(x.l).replace('\u0000', ''), d = String(x.d).replace('\u0000', '');
+    var tmp = String(x.l).charAt(0) === '\u0000' || String(x.d).charAt(0) === '\u0000';
+    if (tmp && seen[l + '|' + d]) return;
+    seen[l + '|' + d] = 1; keep.push({ l: l, d: d, km: x.km });
+  });
+  o.dist = keep;
+  // hapus dumping TOS6 (bila belum dipakai di catatan)
+  if (!usedD['TOS6']) {
+    o.dumpings = o.dumpings.filter(function (x) { return x.name !== 'TOS6'; });
+    o.dist = o.dist.filter(function (x) { return x.d !== 'TOS6'; });
+  }
+  // lengkapi matriks (hanya yang masih kosong)
+  var have = {}; o.dist.forEach(function (x) { have[x.l + '|' + x.d] = 1; });
+  var ln = {}, dn = {}; o.loadings.forEach(function (x) { ln[x.name] = 1; }); o.dumpings.forEach(function (x) { dn[x.name] = 1; });
+  MIG3_FILL.forEach(function (f) { if (ln[f[0]] && dn[f[1]] && !have[f[0] + '|' + f[1]]) o.dist.push({ l: f[0], d: f[1], km: f[2] }); });
+  // KM absolut dumping (hanya bila kosong)
+  o.dumpings.forEach(function (x) { if (!isNum(x.abs) && MIG3_ABS[x.name] != null) x.abs = MIG3_ABS[x.name]; });
+  // pasangan yang masih kosong: hitung dari selisih KM absolut (POS12 dikecualikan karena rutenya berbeda)
+  o.dist.forEach(function (x) { have[x.l + '|' + x.d] = 1; });
+  o.loadings.forEach(function (l) { o.dumpings.forEach(function (d) {
+    if (d.name === 'POS12' || have[l.name + '|' + d.name] || !isNum(l.abs) || !isNum(d.abs)) return;
+    o.dist.push({ l: l.name, d: d.name, km: Math.round(Math.abs(+l.abs - +d.abs) * 10) / 10 });
+  }); });
+}
+function defaultState() {
+  var st = startForDate(new Date(), 29);
+  var o = {
+    v: 2,
+    settings: applyContract({ nama: '', nip: '', jabatan: 'Driver Dump Truck', unit: '', poh: '', status: '', lokasi: '', openDay: 29, closeDay: 28, tarif: 0, gp: 0, insentif: 0, onsite: 0, bpjsKes: 1, bpjsTk: 2, pph: 2.5, hariBulan: 30, kmBasis: 'pdf' }),
+    loadings: JSON.parse(JSON.stringify(DEFAULT_LOC.loadings)),
+    dumpings: JSON.parse(JSON.stringify(DEFAULT_LOC.dumpings)),
+    dist: DEFAULT_LOC.dist.map(function (x) { return { l: x.l, d: x.d, km: x.km }; }),
+    periods: {}
+  };
+  o.periods[st] = newPeriod(st, 28);
+  migrate3(o); o.mig = 3;
+  return o;
+}
+var S = defaultState();
+var D = {}; // dist map "l|d" -> km
+function rebuildDist() { D = {}; S.dist.forEach(function (x) { if (isNum(x.km)) D[x.l + '|' + x.d] = +x.km; }); }
+/* smart distance update - ubah 1 jarak, sisanya auto-follow */
+function editLoadingAbs(loadingName, newAbs) {
+  var lo = S.loadings.find(function(l) { return l.name === loadingName; });
+  if (!lo) return false;
+  var oldAbs = lo.abs, diff = newAbs - oldAbs;
+  lo.abs = newAbs;
+  S.dist.forEach(function(d) { if (d.l === loadingName) d.km = r2(d.km + diff); });
+  rebuildDist(); dirty = true; return true;
+}
+function editDumpingAbs(dumpingName, newAbs) {
+  var do_ = S.dumpings.find(function(d) { return d.name === dumpingName; });
+  if (!do_) return false;
+  var oldAbs = do_.abs, diff = Math.abs(newAbs - oldAbs);
+  do_.abs = newAbs;
+  S.dist.forEach(function(d) { if (d.d === dumpingName) d.km = r2(Math.abs(d.km - (oldAbs - newAbs))); });
+  rebuildDist(); dirty = true; return true;
+}
+function normalize(raw) {
+  var base = defaultState();
+  if (!raw || typeof raw !== 'object') { migrate3(base); base.mig = 3; return base; }
+  var rs = raw.settings || {};
+  var st = applyContract(Object.assign({}, base.settings, rs));
+  ['start', 'travel', 'potLain', 'hkOverride'].forEach(function (k) { delete st[k]; });
+  var per = {};
+  if (raw.periods && typeof raw.periods === 'object') {
+    Object.keys(raw.periods).forEach(function (k) {
+      var p = raw.periods[k] || {};
+      per[k] = { start: p.start || k, end: p.end || periodEndFor(p.start || k, st.closeDay), closed: !!p.closed, closedAt: p.closedAt || '', hkOverride: p.hkOverride == null ? '' : p.hkOverride, travel: p.travel == null ? '' : p.travel, potLain: p.potLain == null ? '' : p.potLain, pphNominal: p.pphNominal == null ? '' : p.pphNominal, days: p.days && typeof p.days === 'object' ? p.days : {} };
+    });
+  } else if (raw.days && typeof raw.days === 'object') {
+    var s0 = rs.start || Object.keys(base.periods)[0];
+    var p0 = newPeriod(s0, st.closeDay);
+    p0.days = raw.days; p0.hkOverride = rs.hkOverride == null ? '' : rs.hkOverride; p0.travel = rs.travel ? rs.travel : ''; p0.potLain = rs.potLain ? rs.potLain : '';
+    per[s0] = p0;
+  }
+  if (!Object.keys(per).length) per = base.periods;
+  var out = { v: 2, mig: +raw.mig || 0, settings: st, loadings: Array.isArray(raw.loadings) ? raw.loadings : base.loadings, dumpings: (Array.isArray(raw.dumpings) ? raw.dumpings : base.dumpings).map(function (d) { var o = { name: d.name, abs: d.abs }; if (!isNum(o.abs)) { var dd = DEFAULT_LOC.dumpings.filter(function (x) { return x.name === d.name; })[0]; o.abs = dd && dd.abs != null ? dd.abs : ''; } return o; }), dist: Array.isArray(raw.dist) ? raw.dist : base.dist, periods: per };
+  if (out.mig < 3) migrate3(out);
+  out.mig = 3;
+  return out;
+}
+function P() { return S.periods[UI.cur]; }
+function periodKeys() { return Object.keys(S.periods).sort(); }
+function dayCount(p) { p = p || P(); return Math.round((parseDate(p.end) - parseDate(p.start)) / 86400000) + 1; }
+function N() { return dayCount(); }
+function locked() { return !!(P() && P().closed); }
+function periodLabel(p) { return fDM.format(parseDate(p.start)) + ' – ' + fDMY.format(parseDate(p.end)); }
+var FIRST_START = '2026-09-29';
+function periodTitle(st, en) {
+  var a = parseDate(st), b = parseDate(en), mf = new Intl.DateTimeFormat('id-ID', { month: 'long' });
+  var ma = mf.format(a), mb = mf.format(b);
+  if (a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()) return ma + ' ' + b.getFullYear();
+  return a.getFullYear() === b.getFullYear() ? ma + ' \u2013 ' + mb + ' ' + b.getFullYear() : ma + ' ' + a.getFullYear() + ' \u2013 ' + mb + ' ' + b.getFullYear();
+}
+function periodChain() {
+  var keys = periodKeys(), first = keys[0] < FIRST_START ? keys[0] : FIRST_START;
+  var lim = new Date(); lim.setDate(lim.getDate() + 370); var limS = iso(lim);
+  var out = [], seen = {}, st = first, guard = 0;
+  while (st <= limS && guard++ < 120) {
+    var p = S.periods[st], en = p ? p.end : periodEndFor(st, S.settings.closeDay);
+    out.push({ start: st, end: en, closed: p ? !!p.closed : false }); seen[st] = 1;
+    var d = parseDate(en); d.setDate(d.getDate() + 1); st = iso(d);
+  }
+  keys.forEach(function (k) { if (!seen[k]) out.push({ start: k, end: S.periods[k].end, closed: !!S.periods[k].closed }); });
+  out.sort(function (x, y) { return x.start < y.start ? -1 : 1; });
+  return out;
+}
+function chooseCurrent() {
+  var t = todayStr(), keys = periodKeys(), hit = null;
+  keys.forEach(function (k) { var p = S.periods[k]; if (p.start <= t && t <= p.end) hit = k; });
+  return hit || keys[keys.length - 1];
+}
+function getDay(n, create) {
+  var days = P().days, k = String(n), d = days[k];
+  if (!d && create) { d = days[k] = { shift: '', slots: [] }; }
+  if (d) { while (d.slots.length < 3) d.slots.push({ l: '', d: '', bd: '', pdf: '', note: '' }); }
+  return d || null;
+}
+function blankSlot() { return { l: '', d: '', bd: '', pdf: '', note: '' }; }
+function loadObj(n) { return S.loadings.filter(function (x) { return x.name === n; })[0]; }
+function dumpObj(n) { return S.dumpings.filter(function (x) { return x.name === n; })[0]; }
+
+/* ---------- dates ---------- */
+function parseDate(s) { var p = String(s).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+function dayDate(n) { var d = parseDate(P().start); d.setDate(d.getDate() + n - 1); return d; }
+var fWd = new Intl.DateTimeFormat('id-ID', { weekday: 'short' });
+var fWdL = new Intl.DateTimeFormat('id-ID', { weekday: 'long' });
+var fDM = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' });
+var fDMY = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+function todayIdx() {
+  var t = new Date(); t = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  var s = parseDate(P().start);
+  return Math.round((t - s) / 86400000) + 1;
+}
+
+/* ---------- calculation ---------- */
+function calcSlot(s) {
+  var r = { st: 'empty', counted: false, km: 0, known: false, route: '', diff: null };
+  if (!s || (!s.l && !s.d)) return r;
+  if (!s.l || !s.d) { r.st = 'partial'; return r; }
+  r.route = s.l + ' → ' + (s.d === BD ? BD_LABEL : s.d);
+  if (s.l === LJB) {
+    if (s.d === BD) { r.st = 'partial'; r.route = ''; return r; }
+    var dl = dumpObj(s.d);
+    if (!dl) { r.st = 'partial'; r.route = ''; return r; }
+    r.counted = true;
+    if (!isNum(s.bd)) r.st = 'needbd';
+    else if (!isNum(dl.abs)) r.st = 'noabsd';
+    else { r.km = r2(Math.abs(+s.bd - +dl.abs)); r.known = true; r.st = 'ok'; r.route = LJB + ' (KM ' + s.bd + ') \u2192 ' + s.d; }
+    if (r.known && isNum(s.pdf)) r.diff = r2(+s.pdf - r.km);
+    return r;
+  }
+  var l = loadObj(s.l);
+  if (!l) { r.st = 'partial'; r.route = ''; return r; }
+  if (s.d === BD) {
+    r.counted = true;
+    if (!isNum(s.bd)) { r.st = 'needbd'; }
+    else if (!isNum(l.abs)) { r.st = 'noabs'; }
+    else {
+      var k2 = 0, ljst = '';
+      if (s.lj) { var dj = dumpObj(s.lj); if (dj && isNum(dj.abs)) k2 = Math.abs(+s.bd - +dj.abs); else ljst = 'noabsd'; }
+      r.km = r2(Math.abs(+l.abs - +s.bd) + k2); r.known = !ljst; r.st = ljst || 'ok';
+      r.route = s.l + ' \u2192 BD di jalan (KM ' + s.bd + ')' + (s.lj ? ' \u2192 ' + s.lj : '');
+    }
+  } else {
+    if (!dumpObj(s.d)) { r.st = 'partial'; r.route = ''; return r; }
+    r.counted = true;
+    var v = D[s.l + '|' + s.d];
+    if (v == null) { r.st = 'missing'; } else { r.km = v; r.known = true; r.st = 'ok'; }
+  }
+  if (r.known && isNum(s.pdf)) r.diff = r2(+s.pdf - r.km);
+  return r;
+}
+function calcDay(n) {
+  var d = getDay(n), o = { rit: 0, km: 0, pdf: 0, diff: 0, hasDiff: false, filled: 0 };
+  if (!d) return o;
+  d.slots.forEach(function (s) {
+    var c = calcSlot(s);
+    if (c.counted) { o.rit++; o.km += c.km; }
+    if (c.st !== 'empty') o.filled++;
+    if (isNum(s.pdf)) o.pdf += +s.pdf;
+    if (c.diff != null) { o.diff += c.diff; o.hasDiff = true; }
+  });
+  o.km = r2(o.km); o.pdf = r2(o.pdf); o.diff = r2(o.diff);
+  return o;
+}
+function allTrips(from, to) {
+  var out = [];
+  for (var n = from; n <= to; n++) {
+    var d = getDay(n); if (!d) continue;
+    d.slots.forEach(function (s, i) {
+      var c = calcSlot(s);
+      if (c.counted) out.push({ day: n, slot: i + 1, l: s.l, d: s.d, km: c.km, pdf: isNum(s.pdf) ? +s.pdf : null, diff: c.diff, st: c.st, note: s.note || '', bd: (s.d === BD || s.l === LJB) ? s.bd : '', lj: s.d === BD ? (s.lj || '') : '' });
+    });
+  }
+  return out;
+}
+function autoHK() {
+  var h = 0;
+  for (var n = 1; n <= N(); n++) { var d = getDay(n); if (d && (d.shift === 'NS' || d.shift === 'DS')) h++; }
+  return h;
+}
+function totals(from, to) {
+  if (to == null) to = N();
+  var t = { rit: 0, km: 0, pdf: 0, diff: 0, incomplete: 0 };
+  for (var n = from; n <= to; n++) {
+    var c = calcDay(n); t.rit += c.rit; t.km += c.km; t.pdf += c.pdf; t.diff += c.diff;
+    var d = getDay(n); if (d) d.slots.forEach(function (s) { if (calcSlot(s).st === 'partial') t.incomplete++; });
+  }
+  t.km = r2(t.km); t.pdf = r2(t.pdf); t.diff = r2(t.diff);
+  return t;
+}
+function missingPairs() {
+  var m = 0;
+  S.loadings.forEach(function (l) { S.dumpings.forEach(function (d) { if (D[l.name + '|' + d.name] == null) m++; }); });
+  return m;
+}
+
+/* ---------- persistence ---------- */
+var db = null, mode = 'local', dirty = false, saving = false, timer = null, loaded = false;
+var lastSaved = '';
+function serialize() {
+  var per = {};
+  Object.keys(S.periods).forEach(function (pk) {
+    var p = S.periods[pk], days = {};
+    Object.keys(p.days).forEach(function (k) {
+      var d = p.days[k];
+      var any = d.shift || d.slots.some(function (s) { return s.l || s.d || s.note || isNum(s.pdf) || isNum(s.bd); });
+      if (any) days[k] = d;
+    });
+    per[pk] = { start: p.start, end: p.end, closed: !!p.closed, closedAt: p.closedAt || '', hkOverride: p.hkOverride, travel: p.travel, potLain: p.potLain, pphNominal: p.pphNominal, days: days };
+  });
+  lastSaved = new Date().toISOString();
+  return { v: 2, mig: S.mig, settings: S.settings, loadings: S.loadings, dumpings: S.dumpings, dist: S.dist, periods: per, updated: lastSaved };
+}
+function setSync(text, cls) { var e = $('#sync'); e.textContent = text; e.className = 'sync' + (cls ? ' ' + cls : ''); }
+function idleLabel() { return mode === 'db' ? ['Tersimpan di akun', 'ok'] : ['Di perangkat ini', '']; }
+function touch() {
+  dirty = true; setSync('Menyimpan…');
+  try { localStorage.setItem('ritase-v1', JSON.stringify(serialize())); } catch (e) {}
+  clearTimeout(timer); timer = setTimeout(flush, 700);
+}
+async function flush() {
+  if (saving) { timer = setTimeout(flush, 300); return; }
+  if (!dirty) return;
+  if (!db) { dirty = false; var a = idleLabel(); setSync(a[0], a[1]); return; }
+  saving = true; dirty = false;
+  try { await db.doc('app/main').set(serialize()); mode = 'db'; }
+  catch (e) { mode = 'local'; setSync('Gagal simpan ke akun', 'err'); saving = false; return; }
+  saving = false;
+  if (dirty) { timer = setTimeout(flush, 100); return; }
+  var b = idleLabel(); setSync(b[0], b[1]);
+}
+async function boot() {
+  var local = null;
+  try { var t = localStorage.getItem('ritase-v1'); if (t) local = JSON.parse(t); } catch (e) {}
+  if (local) S = normalize(local);
+  rebuildDist(); initUi(); render();
+  var a = idleLabel(); setSync(a[0], a[1]);
+  try {
+    if (window.claude && window.claude.use) db = await window.claude.use('db');
+    if (db) {
+      var snap = await db.doc('app/main').get();
+      if (snap.exists && !dirty) { S = normalize(snap.data()); lastSaved = snap.data().updated || ''; rebuildDist(); initUi(); render(); }
+      else if (!snap.exists && local) { dirty = true; flush(); }
+      mode = 'db';
+      var c = idleLabel(); if (!dirty) setSync(c[0], c[1]);
+    }
+  } catch (e) { db = null; mode = 'local'; var d = idleLabel(); setSync(d[0], d[1]); }
+  loaded = true;
+}
+
+/* ---------- ui state ---------- */
+var STANDALONE = !(window.claude && window.claude.use);
+var UI = { importMsg: '', tab: 'catat', cur: '', day: 1, from: 1, to: 31, adding: null, draft: { name: '', abs: '' }, edit: null };
+function initUi() {
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('ritase-ui') || 'null'); } catch (e) {}
+  if (saved && saved.tab) UI.tab = saved.tab;
+  UI.cur = chooseCurrent();
+  var t = todayIdx(); UI.day = (t >= 1 && t <= N()) ? t : 1;
+  UI.from = 1; UI.to = N();
+}
+function selectPeriod(k) { if (!S.periods[k]) { S.periods[k] = newPeriod(k, S.settings.closeDay); touch(); } UI.cur = k; var t = todayIdx(); UI.day = (t >= 1 && t <= N()) ? t : 1; UI.from = 1; UI.to = N(); UI.edit = null; UI.adding = null; }
+function saveUi() { try { localStorage.setItem('ritase-ui', JSON.stringify({ tab: UI.tab })); } catch (e) {} }
+function toast(msg) { var t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(function () { t.hidden = true; }, 2400); }
+
+/* ---------- icons ---------- */
+var IC = {
+  catat: '<path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>',
+  rekap: '<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>',
+  lokasi: '<path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  gaji: '<path d="M3 7h16a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7zm0 0V6a2 2 0 012-2h11"/><path d="M17 14h.01"/>',
+  bantu: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 114 2c-1 .7-1.5 1.2-1.5 2.5M12 17h.01"/>',
+  driver: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/>',
+  prev: '<path d="M15 5l-7 7 7 7"/>', next: '<path d="M9 5l7 7-7 7"/>'
+};
+function icon(n) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>'; }
+var TABS = [['catat', 'Catat'], ['rekap', 'Rekap'], ['lokasi', 'Lokasi'], ['gaji', 'Gaji'], ['driver', 'Driver'], ['bantu', 'Petunjuk']];
+function renderTabs() {
+  $('#tabs').innerHTML = TABS.map(function (t) {
+    return '<button class="tab" data-tab="' + t[0] + '" aria-selected="' + (UI.tab === t[0]) + '">' + icon(t[0]) + '<span>' + t[1] + '</span></button>';
+  }).join('');
+}
+
+/* ---------- render root ---------- */
+function render() {
+  if (!S.periods[UI.cur]) initUi();
+  if (UI.day > N()) UI.day = N();
+  if (UI.to > N()) UI.to = N();
+  var st = S.settings;
+  $('#sub').textContent = [st.jabatan, st.lokasi].filter(Boolean).join(' · ');
+  renderTabs();
+  var v = $('#view');
+  var pb = (UI.tab === 'catat' || UI.tab === 'rekap' || UI.tab === 'gaji' || UI.tab === 'driver') ? periodBar() : '';
+  if (UI.tab === 'catat') v.innerHTML = pb + viewCatat();
+  else if (UI.tab === 'rekap') v.innerHTML = pb + viewRekap();
+  else if (UI.tab === 'lokasi') v.innerHTML = viewLokasi();
+  else if (UI.tab === 'gaji') v.innerHTML = pb + viewGaji();
+  else if (UI.tab === 'driver') v.innerHTML = pb + viewDriver();
+  else v.innerHTML = viewBantu();
+  if (UI.tab === 'catat') { var c = $('.chip[aria-current="true"]'); if (c) c.scrollIntoView({ inline: 'center', block: 'nearest' }); }
+  if (UI.tab === 'gaji') updateGaji();
+}
+
+/* ---------- PERIODE ---------- */
+function periodBar() {
+  var p = P(), keys = periodKeys().reverse(), t = todayStr(), nxt = '';
+  var last = S.periods[periodKeys().slice(-1)[0]];
+  var h = '<div class="card pbar"><div class="eyebrow" style="margin-bottom:8px">Periode buku</div>';
+  h += '<select id="pperiod" aria-label="Pilih periode">' + periodChain().map(function (q) { return '<option value="' + q.start + '"' + (q.start === UI.cur ? ' selected' : '') + '>' + periodTitle(q.start, q.end) + (q.closed ? ' (ditutup)' : '') + '</option>'; }).join('') + '</select>';
+  h += '<div class="row" style="margin-top:10px"><span class="pill ' + (p.closed ? 'bad' : 'good') + '">' + (p.closed ? 'Buku ditutup' : 'Buku terbuka') + '</span><span class="small muted">Buka ' + fDM.format(parseDate(p.start)) + ', tutup ' + fDMY.format(parseDate(p.end)) + ' \u00B7 ' + dayCount(p) + ' hari</span></div>';
+  h += '<div class="row" style="margin-top:10px">';
+  h += p.closed ? '<button class="btn sm" data-act="openbook">Buka kembali</button>' : '<button class="btn sm" data-act="closebook">Tutup buku</button>';
+  h += '<button class="btn sm" data-act="newperiod">Periode berikutnya</button></div>';
+  if (p.closed) h += '<p class="small muted" style="margin:10px 0 0">Catatan periode ini dikunci. Ketuk Buka kembali bila perlu koreksi.</p>';
+  else if (p.end < t) h += '<p class="note-warn" style="margin:10px 0 0">Periode ini sudah lewat tanggal tutup. Tutup buku, lalu ketuk Periode berikutnya.</p>';
+  return h + '</div>';
+}
+
+/* ---------- CATAT ---------- */
+function locOptions(list, sel, withBd) {
+  var h = '<option value="">— pilih —</option>';
+  list.forEach(function (x) { h += '<option value="' + esc(x.name) + '"' + (x.name === sel ? ' selected' : '') + '>' + esc(x.name) + '</option>'; });
+  if (withBd) h += '<option value="' + BD + '"' + (sel === BD ? ' selected' : '') + '>' + BD_LABEL + '</option>';
+  else h += '<option value="' + LJB + '"' + (sel === LJB ? ' selected' : '') + '>' + LJB + ' (ambil di jalan)</option>';
+  return h;
+}
+function pillFor(c) {
+  if (c.st === 'empty') return ['Kosong', ''];
+  if (c.st === 'partial') return ['Belum lengkap', 'warn'];
+  if (c.st === 'needbd') return ['Isi KM titik BD', 'warn'];
+  if (c.st === 'noabs') return ['Loading belum punya KM absolut', 'warn'];
+  if (c.st === 'noabsd') return ['Dumping lanjutan belum punya KM absolut', 'warn'];
+  if (c.st === 'missing') return ['Jarak belum diisi', 'warn'];
+  return ['1 ritase', 'good'];
+}
+function diffInfo(c, s) {
+  if (c.diff == null) return ['—', ''];
+  var t = (c.diff > 0 ? '+' : '') + km(c.diff);
+  return [t + ' km', c.diff < 0 ? 'neg' : (c.diff > 0 ? 'pos' : '')];
+}
+function slotHtml(n, i) {
+  var d = getDay(n, false), s = d ? d.slots[i] : blankSlot(), c = calcSlot(s), p = pillFor(c), df = diffInfo(c, s);
+  var dz = locked() ? ' disabled' : '';
+  var h = '<article class="card slot" data-slot="' + i + '">';
+  h += '<div class="slot-head"><h3>Slot ' + (i + 1) + '</h3><span class="pill ' + p[1] + '" data-r="pill">' + p[0] + '</span></div>';
+  h += '<div class="grid2 stack"><label class="f">Loading<select data-f="l" id="l' + i + '"' + dz + '>' + locOptions(S.loadings, s.l, false) + '</select></label>';
+  h += '<label class="f">Dumping<select data-f="d" id="d' + i + '"' + dz + '>' + locOptions(S.dumpings, s.d, true) + '</select></label></div>';
+  if (s.l === LJB) {
+    var dl0 = dumpObj(s.d);
+    h += '<label class="f">KM titik ambil (1\u201370)<input type="number" inputmode="decimal" min="1" max="70" step="0.1" data-f="bd" id="bd' + i + '" value="' + esc(s.bd) + '" placeholder="contoh 52"' + dz + '></label>';
+    h += '<p class="small muted" style="margin:0">Dipakai bila driver hanya melanjutkan dump truck yang berhenti di jalan: jarak = selisih KM titik ambil dengan KM absolut dumping.</p>';
+    if (s.d && dl0 && !isNum(dl0.abs)) h += '<div class="note-warn">Dumping ' + esc(s.d) + ' belum punya KM absolut. Isi di tab Lokasi (Ubah).</div>';
+  }
+  if (s.d === BD) {
+    var lo = loadObj(s.l);
+    h += '<label class="f">KM titik BD (1–70)<input type="number" inputmode="decimal" min="1" max="70" step="0.1" data-f="bd" id="bd' + i + '" value="' + esc(s.bd) + '" placeholder="contoh 45"' + dz + '></label>';
+    if (s.l && lo && !isNum(lo.abs)) h += '<div class="note-warn">Loading ini belum punya KM absolut. Isi di tab Lokasi (Ubah) supaya jarak BD bisa dihitung.</div>';
+    var ljopts = '<option value="">Tidak lanjut</option>' + S.dumpings.filter(function (x) { return isNum(x.abs) || x.name === s.lj; }).map(function (x) { return '<option value="' + esc(x.name) + '"' + (x.name === s.lj ? ' selected' : '') + '>' + esc(x.name) + (isNum(x.abs) ? ' (KM ' + km(+x.abs) + ')' : '') + '</option>'; }).join('');
+    h += '<label class="f">Lanjut ke dumping setelah BD (opsional)<select data-f="lj" id="lj' + i + '"' + dz + '>' + ljopts + '</select></label>';
+    if (s.lj && dumpObj(s.lj) && !isNum(dumpObj(s.lj).abs)) h += '<div class="note-warn">Dumping ' + esc(s.lj) + ' belum punya KM absolut. Isi di tab Lokasi (Ubah).</div>';
+  }
+  if (c.st === 'missing') {
+    h += '<div class="note-warn">Jarak ' + esc(s.l) + ' → ' + esc(s.d) + ' belum ada. Isi di sini, otomatis tersimpan di daftar jarak.</div>';
+    h += '<label class="f">Jarak (km)<input type="number" inputmode="decimal" min="0" step="0.1" data-f="dist" id="dist' + i + '" placeholder="contoh 45,2" class="warn"' + dz + '></label>';
+  }
+  h += '<div class="result"><div class="km num"><span data-r="km">' + (c.counted ? km(c.km) : '—') + '</span><small>km</small></div><div class="route" data-r="route">' + esc(c.route || 'Pilih loading dan dumping') + '</div></div>';
+  h += '<div class="grid2"><label class="f">KM PDF<input type="number" inputmode="decimal" min="0" step="0.1" data-f="pdf" id="pdf' + i + '" value="' + esc(s.pdf) + '" placeholder="opsional"' + dz + '></label>';
+  h += '<div class="diff ' + df[1] + '" data-r="diff"><span>Selisih (PDF − hitungan)</span><b class="num">' + df[0] + '</b></div></div>';
+  h += '<label class="f">Catatan<input type="text" data-f="note" id="note' + i + '" value="' + esc(s.note) + '" placeholder="opsional"' + dz + '></label>';
+  return h + '</article>';
+}
+function chipsHtml() {
+  var h = '', t = todayIdx();
+  for (var n = 1; n <= N(); n++) {
+    var dt = dayDate(n), c = calcDay(n);
+    h += '<button class="chip' + (c.rit ? ' has' : '') + (n === t ? ' today' : '') + '" data-day="' + n + '"' + (n === UI.day ? ' aria-current="true"' : '') + ' aria-label="Hari ke-' + n + ', ' + fDM.format(dt) + '">';
+    h += '<span class="wd">' + fWd.format(dt).replace('.', '') + '</span><span class="dn">' + dt.getDate() + '</span><span class="rt">' + (c.rit ? c.rit + ' rit' : '') + '</span></button>';
+  }
+  return h;
+}
+function daySumHtml() {
+  var c = calcDay(UI.day), df = c.hasDiff ? (c.diff > 0 ? '+' : '') + km(c.diff) : '—';
+  return '<div class="tile"><span class="lbl">Ritase</span><span class="val num">' + c.rit + '</span></div>' +
+    '<div class="tile"><span class="lbl">Total KM</span><span class="val num">' + km(c.km) + '</span></div>' +
+    '<div class="tile"><span class="lbl">KM PDF</span><span class="val num">' + (c.pdf ? km(c.pdf) : '—') + '</span></div>' +
+    '<div class="tile ' + (c.hasDiff ? (c.diff < 0 ? 'neg' : c.diff > 0 ? 'pos' : '') : '') + '"><span class="lbl">Selisih</span><span class="val num">' + df + '</span></div>';
+}
+function viewCatat() {
+  var n = UI.day, dt = dayDate(n), d = getDay(n, false), t = todayIdx();
+  var h = '<div class="daybar"><div><div class="eyebrow">Hari ke-' + n + ' dari ' + N() + (n === t ? ' · hari ini' : '') + '</div><h2>' + fWdL.format(dt) + ', ' + fDMY.format(dt) + '</h2></div>';
+  h += '<div class="nav"><button class="icon-btn" data-nav="-1" aria-label="Hari sebelumnya"' + (n <= 1 ? ' disabled' : '') + '>' + icon('prev') + '</button><button class="icon-btn" data-nav="1" aria-label="Hari berikutnya"' + (n >= N() ? ' disabled' : '') + '>' + icon('next') + '</button></div></div>';
+  h += '<div class="strip" id="strip" role="group" aria-label="Pilih tanggal">' + chipsHtml() + '</div>';
+  var sh = d ? d.shift : '';
+  h += '<div class="card"><div class="eyebrow" style="margin-bottom:8px">Shift hari ini</div><div class="seg" id="shift">';
+  [['DS', 'Day Shift (DS)'], ['NS', 'Night Shift (NS)'], ['OFF', 'OFF']].forEach(function (x) { h += '<button data-shift="' + x[0] + '" aria-pressed="' + (sh === x[0]) + '"' + (locked() ? ' disabled' : '') + '>' + x[1] + '</button>'; });
+  h += '</div></div>';
+  for (var i = 0; i < 3; i++) h += slotHtml(n, i);
+  h += '<div class="tiles" id="daysum">' + daySumHtml() + '</div>';
+  h += '<div class="row"><button class="btn" data-act="copyprev"' + (n <= 1 || locked() ? ' disabled' : '') + '>Salin dari hari sebelumnya</button><button class="btn danger" data-act="clearday"' + (locked() ? ' disabled' : '') + '>Kosongkan hari ini</button></div>';
+  h += '<p class="small muted" style="margin:0">1 slot yang terisi lengkap (loading dan dumping) dihitung 1 ritase. Slot 3 boleh dikosongkan.</p>';
+  return h;
+}
+function refreshSlotDerived(i) {
+  var card = $('.slot[data-slot="' + i + '"]'); if (!card) return;
+  var s = getDay(UI.day).slots[i], c = calcSlot(s), p = pillFor(c), df = diffInfo(c, s);
+  var pill = $('[data-r="pill"]', card); pill.textContent = p[0]; pill.className = 'pill ' + p[1];
+  $('[data-r="km"]', card).textContent = c.counted ? km(c.km) : '—';
+  $('[data-r="route"]', card).textContent = c.route || 'Pilih loading dan dumping';
+  var dEl = $('[data-r="diff"]', card); dEl.className = 'diff ' + df[1]; $('b', dEl).textContent = df[0];
+  $('#daysum').innerHTML = daySumHtml();
+  var strip = $('#strip'), sl = strip.scrollLeft; strip.innerHTML = chipsHtml(); strip.scrollLeft = sl;
+}
+function ensureShift(n) {
+  var d = getDay(n, true);
+  if (d.shift) return;
+  var guess = 'NS';
+  for (var k = n - 1; k >= 1; k--) { var p = getDay(k); if (p && (p.shift === 'NS' || p.shift === 'DS')) { guess = p.shift; break; } }
+  d.shift = guess;
+  $$('#shift button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.shift === guess)); });
+}
+
+/* ---------- REKAP ---------- */
+function rekapData() {
+  var f = UI.from, t = UI.to, trips = allTrips(f, t), byL = {}, byD = {}, mx = {}, lj = {};
+  trips.forEach(function (x) {
+    var dn = x.d === BD ? BD : x.d;
+    (byL[x.l] = byL[x.l] || { n: 0, km: 0 }).n++; byL[x.l].km += x.km;
+    (byD[dn] = byD[dn] || { n: 0, km: 0 }).n++; byD[dn].km += x.km;
+    mx[x.l] = mx[x.l] || {}; mx[x.l][dn] = (mx[x.l][dn] || 0) + 1;
+    if (x.d === BD) { var lk0 = x.lj || ''; lj[lk0] = (lj[lk0] || 0) + 1; }
+  });
+  return { trips: trips, byL: byL, byD: byD, mx: mx, lj: lj, tot: totals(f, t), f: f, t: t };
+}
+function barList(map, total, isDump) {
+  var keys = Object.keys(map).sort(function (a, b) { return map[b].n - map[a].n || a.localeCompare(b); });
+  if (!keys.length) return '<div class="empty">Belum ada ritase pada rentang ini.</div>';
+  return '<ul class="bars">' + keys.map(function (k) {
+    var m = map[k], pct = total ? Math.round(m.n / total * 100) : 0, bd = k === BD;
+    return '<li class="bar' + (bd ? ' bd' : '') + '"><span class="nm">' + esc(bd ? BD_LABEL : k) + '</span><span class="ct num">' + m.n + '<small>rit</small></span><span class="track"><span class="fill" style="width:' + pct + '%"></span></span><span class="meta num">' + km(m.km) + ' km · ' + pct + '%</span></li>';
+  }).join('') + '</ul>';
+}
+function viewRekap() {
+  var R = rekapData(), tot = R.tot;
+  var opts = function (sel) { var h = ''; for (var n = 1; n <= N(); n++) h += '<option value="' + n + '"' + (n === sel ? ' selected' : '') + '>' + fDM.format(dayDate(n)) + ' (hari ' + n + ')</option>'; return h; };
+  var h = '<div class="card"><div class="eyebrow" style="margin-bottom:8px">Rentang tanggal</div><div class="grid2 stack"><label class="f">Dari<select id="rf">' + opts(UI.from) + '</select></label><label class="f">Sampai<select id="rt">' + opts(UI.to) + '</select></label></div></div>';
+  h += '<div class="tiles">';
+  h += '<div class="tile"><span class="lbl">Total ritase</span><span class="val num">' + tot.rit + '</span><span class="sub">' + (R.trips.length ? 'rata-rata ' + km(tot.km / (R.trips.length)) + ' km/rit' : 'belum ada data') + '</span></div>';
+  h += '<div class="tile"><span class="lbl">Total KM</span><span class="val num">' + km(tot.km) + '</span><span class="sub">hitungan master</span></div>';
+  h += '<div class="tile"><span class="lbl">KM PDF</span><span class="val num">' + (tot.pdf ? km(tot.pdf) : '—') + '</span><span class="sub">dari laporan</span></div>';
+  h += '<div class="tile ' + (tot.pdf ? (tot.diff < 0 ? 'neg' : tot.diff > 0 ? 'pos' : '') : '') + '"><span class="lbl">Selisih</span><span class="val num">' + (tot.pdf ? (tot.diff > 0 ? '+' : '') + km(tot.diff) : '—') + '</span><span class="sub">PDF − hitungan</span></div>';
+  h += '</div>';
+  if (tot.incomplete) h += '<div class="note-warn">' + tot.incomplete + ' slot belum lengkap (hanya loading atau hanya dumping) dan belum dihitung sebagai ritase.</div>';
+  h += '<section class="card"><h2 class="sec-title">Ritase per loading</h2>' + barList(R.byL, tot.rit) + '</section>';
+  h += '<section class="card"><h2 class="sec-title">Ritase per dumping</h2>' + barList(R.byD, tot.rit, true) + '</section>';
+  if (R.byD[BD]) {
+    var ljk = Object.keys(R.lj).sort(function (a, b) { return R.lj[b] - R.lj[a]; });
+    h += '<section class="card"><h2 class="sec-title">Breakdown di jalan</h2><p style="margin:0 0 8px"><b class="num">' + R.byD[BD].n + '</b> ritase BD, ' + km(R.byD[BD].km) + ' km.</p><ul class="rules">' + ljk.map(function (k) { return '<li>' + (k ? 'Lanjut ke ' + esc(k) : 'Tidak lanjut') + ': <b class="num">' + R.lj[k] + '</b></li>'; }).join('') + '</ul></section>';
+  }
+  var sl = selisihList(R);
+  if (tot.pdf) {
+    h += '<section class="card"><h2 class="sec-title">Daftar selisih</h2>';
+    if (!sl.length) h += '<p class="small muted" style="margin:0">Tidak ada selisih. KM PDF sama dengan hitungan pada semua ritase yang sudah diisi PDF-nya.</p>';
+    else {
+      var sm = 0; sl.forEach(function (x) { sm += x.diff; });
+      h += '<p class="small muted" style="margin:0 0 10px"><b class="num">' + sl.length + '</b> ritase berbeda, total selisih <b class="num">' + (sm > 0 ? '+' : '') + km(sm) + '</b> km. Merah = PDF lebih kecil dari hitungan Anda.</p><div class="tbl-wrap"><table><thead><tr><th>Tanggal</th><th>Loading</th><th>Dumping</th><th>Hitung</th><th>PDF</th><th>Selisih</th></tr></thead><tbody>';
+      sl.forEach(function (x) { h += '<tr><td>' + fWd.format(dayDate(x.day)) + ', ' + fDM.format(dayDate(x.day)) + '<br><span class="small muted">Slot ' + x.slot + '</span></td><td>' + esc(x.l) + '</td><td>' + esc(x.d === BD ? BD_LABEL : x.d) + '</td><td class="num">' + km(x.km) + '</td><td class="num">' + km(x.pdf) + '</td><td class="num" style="color:var(--' + (x.diff < 0 ? 'bad' : 'good') + ',inherit);font-weight:600">' + (x.diff > 0 ? '+' : '') + km(x.diff) + '</td></tr>'; });
+      h += '</tbody></table></div>';
+    }
+    h += '</section>';
+  }
+  var lk = Object.keys(R.mx).sort(function (a, b) { return R.byL[b].n - R.byL[a].n; });
+  var dk = Object.keys(R.byD).sort(function (a, b) { return R.byD[b].n - R.byD[a].n; });
+  if (lk.length) {
+    h += '<section class="card"><h2 class="sec-title">Loading × dumping</h2><div class="tbl-wrap"><table><thead><tr><th>Loading</th>' + dk.map(function (k) { return '<th>' + esc(k === BD ? BD_LABEL : k) + '</th>'; }).join('') + '<th>Total</th></tr></thead><tbody>';
+    lk.forEach(function (l) { h += '<tr><td>' + esc(l) + '</td>' + dk.map(function (k) { var v = R.mx[l][k] || 0; return '<td class="num' + (v ? '' : ' zero') + '">' + (v || '–') + '</td>'; }).join('') + '<td class="num"><b>' + R.byL[l].n + '</b></td></tr>'; });
+    h += '</tbody><tfoot><tr><td>Total</td>' + dk.map(function (k) { return '<td class="num">' + R.byD[k].n + '</td>'; }).join('') + '<td class="num">' + tot.rit + '</td></tr></tfoot></table></div></section>';
+  }
+  h += '<div class="row"><button class="btn primary" data-act="copyrekap">Salin ringkasan</button><button class="btn" data-act="csv">Unduh CSV</button><button class="btn" data-act="csvimport"' + (locked() ? ' disabled' : '') + '>Impor CSV</button></div><input type="file" id="csvFile" accept=".csv,text/csv,text/plain" hidden>';
+  if (UI.importMsg) h += '<div class="note-warn" role="status">' + esc(UI.importMsg) + '</div>';
+  h += '<p class="small muted" style="margin:0">Ringkasan berisi teks siap tempel ke WhatsApp. CSV berisi satu baris per ritase (termasuk shift). Impor CSV memasukkan baris ke periode yang dipilih; slot di hari dan slot yang sama ditimpa, data lain tetap.</p>';
+  return h;
+}
+function selisihList(R) { return R.trips.filter(function (x) { return x.diff != null && Math.abs(x.diff) >= 0.05; }); }
+function rekapText() {
+  var R = rekapData(), L = ['REKAP RITASE ' + fDM.format(dayDate(R.f)) + ' - ' + fDMY.format(dayDate(R.t)), 'Total: ' + R.tot.rit + ' ritase | ' + km(R.tot.km) + ' km', '', 'LOADING'];
+  Object.keys(R.byL).sort(function (a, b) { return R.byL[b].n - R.byL[a].n; }).forEach(function (k) { L.push('- ' + k + ': ' + R.byL[k].n + ' rit (' + km(R.byL[k].km) + ' km)'); });
+  L.push('', 'DUMPING');
+  Object.keys(R.byD).sort(function (a, b) { return R.byD[b].n - R.byD[a].n; }).forEach(function (k) { L.push('- ' + (k === BD ? BD_LABEL : k) + ': ' + R.byD[k].n + ' rit (' + km(R.byD[k].km) + ' km)'); });
+  var sl = selisihList(R);
+  if (sl.length) { L.push('', 'DAFTAR SELISIH (' + sl.length + ' ritase)'); sl.forEach(function (x) { L.push('- ' + fWd.format(dayDate(x.day)) + ' ' + fDM.format(dayDate(x.day)) + ' S' + x.slot + ' ' + x.l + ' > ' + (x.d === BD ? BD_LABEL : x.d) + ': hitungan ' + km(x.km) + ', PDF ' + km(x.pdf) + ', selisih ' + (x.diff > 0 ? '+' : '') + km(x.diff)); }); }
+  if (R.byD[BD]) { L.push('', 'BD DI JALAN: ' + R.byD[BD].n + ' rit'); Object.keys(R.lj).forEach(function (k) { L.push('- ' + (k ? 'Lanjut ke ' + k : 'Tidak lanjut') + ': ' + R.lj[k]); }); }
+  return L.join('\n');
+}
+/* ---------- impor CSV ---------- */
+var BULAN = { jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, may: 4, jun: 5, jul: 6, agu: 7, agt: 7, aug: 7, sep: 8, okt: 9, oct: 9, nov: 10, des: 11, dec: 11 };
+function parseCsv(t) {
+  t = String(t).replace(/^\ufeff/, '');
+  var first = t.split(/\r?\n/)[0] || '', dl = (first.split(';').length >= first.split(',').length) ? ';' : ',';
+  var rows = [], row = [], cur = '', q = false;
+  for (var i = 0; i < t.length; i++) {
+    var c = t[i];
+    if (q) { if (c === '"') { if (t[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+    else if (c === '"') q = true;
+    else if (c === dl) { row.push(cur); cur = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; row.push(cur); cur = ''; if (row.some(function (x) { return x !== ''; })) rows.push(row); row = []; }
+    else cur += c;
+  }
+  row.push(cur); if (row.some(function (x) { return x !== ''; })) rows.push(row);
+  return { rows: rows, dl: dl };
+}
+function parseTgl(v) {
+  v = String(v || '').trim(); var m;
+  if ((m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return new Date(+m[1], +m[2] - 1, +m[3]);
+  if ((m = v.match(/^(\d{1,2})[ \-\/]([A-Za-z]{3})[A-Za-z]*[ \-\/,]+(\d{4})/)) && BULAN[m[2].toLowerCase()] != null) return new Date(+m[3], BULAN[m[2].toLowerCase()], +m[1]);
+  if ((m = v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/))) return new Date(+m[3], +m[2] - 1, +m[1]);
+  return null;
+}
+function importCsv(text) {
+  if (locked()) { UI.importMsg = 'Periode ini sudah ditutup. Buka kembali bukunya dulu untuk impor.'; render(); return; }
+  var P0 = parseCsv(text), rows = P0.rows, dec = P0.dl === ';';
+  if (rows.length < 2) { UI.importMsg = 'File kosong atau bukan CSV rekapan.'; render(); return; }
+  var hd = rows[0].map(function (x) { return String(x).trim().toLowerCase(); }), ix = function (n) { return hd.indexOf(n); };
+  var cT = ix('tanggal'), cH = ix('hari ke'), cS = ix('slot'), cL = ix('loading'), cD = ix('dumping'), cB = ix('km titik bd'), cJ = ix('lanjut ke dumping'), cK = ix('km hitungan'), cP = ix('km pdf'), cC = ix('catatan'), cSh = ix('shift');
+  if (cS < 0 || cL < 0 || cD < 0 || (cT < 0 && cH < 0)) { UI.importMsg = 'Kolom tidak dikenali. Gunakan file hasil Unduh CSV dari aplikasi ini (kolom Tanggal, Slot, Loading, Dumping).'; render(); return; }
+  var num = function (v) { v = String(v == null ? '' : v).trim(); if (v === '') return ''; v = dec ? v.replace(/\./g, '').replace(',', '.') : v; return isNum(v) ? +v : ''; };
+  var start = parseDate(P().start), n0 = N(), ok = 0, skip = 0, newL = [], newD = [], autoShift = {}, days = {}, nd = 0;
+  rows.slice(1).forEach(function (r) {
+    var dt = cT >= 0 ? parseTgl(r[cT]) : null, n = dt ? Math.round((dt - start) / 86400000) + 1 : (cH >= 0 ? parseInt(r[cH], 10) : NaN);
+    var si = parseInt(String(r[cS] || '').replace(/\D/g, ''), 10) - 1;
+    var l = String(r[cL] || '').trim(), d = String(r[cD] || '').trim();
+    if (!(n >= 1 && n <= n0) || !(si >= 0 && si < 3) || !l || !d) { skip++; return; }
+    if (d.toLowerCase() === BD_LABEL.toLowerCase()) d = BD;
+    if (l !== LJB && !loadObj(l)) { S.loadings.push({ name: l, abs: '' }); newL.push(l); }
+    if (d !== BD && !dumpObj(d)) { S.dumpings.push({ name: d, abs: '' }); newD.push(d); }
+    rebuildDist();
+    var dd = getDay(n, true), hadShift = !!dd.shift;
+    var sh = cSh >= 0 ? String(r[cSh] || '').trim().toUpperCase() : '';
+    if (sh === 'NS' || sh === 'DS' || sh === 'OFF') dd.shift = sh;
+    else if (!dd.shift) { ensureShift(n); autoShift[n] = 1; }
+    dd.slots[si] = { l: l, d: d, bd: d === BD || l === LJB ? num(r[cB]) : '', lj: d === BD ? String(cJ >= 0 ? r[cJ] || '' : '').trim() : '', pdf: cP >= 0 ? num(r[cP]) : '', note: cC >= 0 ? String(r[cC] || '').trim() : '' };
+    if (d !== BD && l !== LJB && cK >= 0 && num(r[cK]) !== '' && D[l + '|' + d] == null) setDist(l, d, num(r[cK]));
+    days[n] = 1; ok++;
+  });
+  nd = Object.keys(days).length;
+  var m = ok + ' ritase dari ' + nd + ' hari diimpor ke periode ini.';
+  if (skip) m += ' ' + skip + ' baris dilewati (tanggal di luar periode atau data tidak lengkap).';
+  if (newL.length || newD.length) m += ' Lokasi baru ditambahkan: ' + newL.concat(newD).filter(function (x, i, a) { return a.indexOf(x) === i; }).join(', ') + '.';
+  var as = Object.keys(autoShift).length; if (as) m += ' Shift ' + as + ' hari diisi otomatis (NS), periksa di tab Catat.';
+  UI.importMsg = ok ? m : 'Tidak ada baris yang bisa diimpor. ' + m;
+  if (ok) touch(); render();
+}
+function csvText() {
+  var R = rekapData(), rows = [['Tanggal', 'Hari ke', 'Slot', 'Loading', 'Dumping', 'KM titik BD', 'Lanjut ke dumping', 'KM hitungan', 'KM PDF', 'Selisih', 'Catatan', 'Shift']];
+  R.trips.forEach(function (x) {
+    rows.push([fDMY.format(dayDate(x.day)), x.day, 'S' + x.slot, x.l, x.d === BD ? BD_LABEL : x.d, x.bd, x.lj, String(r2(x.km)).replace('.', ','), x.pdf == null ? '' : String(x.pdf).replace('.', ','), x.diff == null ? '' : String(x.diff).replace('.', ','), x.note, (getDay(x.day) || {}).shift || '']);
+  });
+  return '﻿' + rows.map(function (r) { return r.map(function (c) { c = String(c == null ? '' : c); return /[;"\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(';'); }).join('\r\n');
+}
+function copyText(txt) {
+  function fallback() {
+    var ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+    var ok = false; try { ok = document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); toast(ok ? 'Ringkasan disalin' : 'Tidak bisa menyalin, salin manual dari layar');
+  }
+  try { navigator.clipboard.writeText(txt).then(function () { toast('Ringkasan disalin'); }, fallback); } catch (e) { fallback(); }
+}
+function downloadFile(name, text, type) {
+  try { var b = new Blob([text], { type: type }); var u = URL.createObjectURL(b); var a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(u); a.remove(); }, 1500); }
+  catch (e) { toast('Gagal mengunduh file'); }
+}
+async function saveCsv() {
+  try {
+    var dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
+    if (!dl) { downloadFile('rekap-ritase-' + P().start + '.csv', csvText(), 'text/csv'); return; }
+    await dl.save({ filename: 'rekap-ritase.csv', data: csvText() });
+  } catch (e) { if (!e || e.code !== 'declined') toast('Unduhan tidak tersedia di tampilan ini'); }
+}
+
+/* ---------- LOKASI ---------- */
+function usedCount(type, name) {
+  var c = 0;
+  Object.keys(S.periods).forEach(function (pk) { var dd = S.periods[pk].days; Object.keys(dd).forEach(function (k) { dd[k].slots.forEach(function (s) { if ((type === 'l' ? s.l : s.d) === name || (type === 'd' && s.lj === name)) c++; }); }); });
+  return c;
+}
+function missingFor(type, name) {
+  var m = 0;
+  if (type === 'l') S.dumpings.forEach(function (d) { if (D[name + '|' + d.name] == null) m++; });
+  else S.loadings.forEach(function (l) { if (D[l.name + '|' + name] == null) m++; });
+  return m;
+}
+function locRow(type, x) {
+  var editing = UI.edit && UI.edit.type === type && UI.edit.name === x.name, mis = missingFor(type, x.name), used = usedCount(type, x.name);
+  var sub = (isNum(x.abs) ? 'KM absolut ' + km(+x.abs) : 'KM absolut belum diisi') + (type === 'd' ? ' (untuk lanjut BD)' : '') + ' · dipakai ' + used + ' slot';
+  var h = '<li class="loc"><div style="min-width:0"><div class="nm">' + esc(x.name) + '</div><div class="sub">' + sub + '</div></div><div class="acts">';
+  if (mis) h += '<span class="pill warn">' + mis + ' jarak kosong</span>';
+  h += '<button class="btn sm" data-act="editloc" data-type="' + type + '" data-name="' + esc(x.name) + '">Ubah</button></div>';
+  if (editing) {
+    h += '<div class="editbox"><label class="f">Nama<input type="text" id="en" value="' + esc(x.name) + '"></label>';
+    h += '<label class="f">' + (type === 'l' ? 'KM absolut (untuk hitung BD)' : 'KM absolut (untuk lanjut setelah BD)') + '<input type="number" inputmode="decimal" step="0.1" id="ea" value="' + esc(x.abs) + '" placeholder="contoh 70,5"></label>';
+    h += '<div class="row"><button class="btn primary sm" data-act="saveloc">Simpan</button><button class="btn sm" data-act="canceledit">Batal</button>';
+    h += '<button class="btn sm danger" data-act="delloc"' + (used ? ' disabled' : '') + '>' + (UI.edit.confirm ? 'Yakin hapus?' : 'Hapus') + '</button></div>';
+    if (used) h += '<div class="small muted">Tidak bisa dihapus karena dipakai di ' + used + ' slot. Kosongkan slot itu dulu.</div>';
+    h += '</div>';
+  }
+  return h + '</li>';
+}
+function addForm() {
+  var t = UI.adding, opp = t === 'l' ? S.dumpings : S.loadings;
+  var h = '<section class="card" id="addform"><h2 class="sec-title">Tambah lokasi</h2><div class="seg" style="margin-bottom:12px"><button data-addtype="l" aria-pressed="' + (t === 'l') + '">Loading</button><button data-addtype="d" aria-pressed="' + (t === 'd') + '">Dumping</button></div>';
+  h += '<div class="grid2 stack"><label class="f">Nama lokasi<input type="text" id="an" value="' + esc(UI.draft.name) + '" placeholder="' + (t === 'l' ? 'contoh TOS17 A' : 'contoh Pos 8') + '"></label>';
+  h += '<label class="f">KM absolut (opsional)<input type="number" inputmode="decimal" step="0.1" id="aa" value="' + esc(UI.draft.abs) + '" placeholder="' + (t === 'l' ? 'untuk hitung BD' : 'untuk lanjut setelah BD') + '"></label>';
+  h += '</div><h3 style="margin:14px 0 4px;font-size:18px">Jarak ' + (t === 'l' ? 'ke tiap dumping' : 'dari tiap loading') + ' (km)</h3><p class="small muted" style="margin:0 0 10px">Boleh dikosongkan dulu, nanti bisa diisi di matriks jarak atau langsung saat mencatat slot.</p><div class="distlist">';
+  opp.forEach(function (o, i) { h += '<span>' + esc(o.name) + '</span><input type="number" inputmode="decimal" min="0" step="0.1" data-ad="' + i + '" aria-label="Jarak ke ' + esc(o.name) + '">'; });
+  h += '</div><div class="row" style="margin-top:14px"><button class="btn primary" data-act="addsave">Simpan lokasi</button><button class="btn" data-act="addcancel">Batal</button></div><div class="note-warn" id="aerr" hidden style="margin-top:10px"></div></section>';
+  return h;
+}
+function matrixHtml() {
+  if (!S.loadings.length || !S.dumpings.length) return '';
+  var h = '<div class="tbl-wrap mx"><table><thead><tr><th>Loading \\ Dumping</th>' + S.dumpings.map(function (d) { return '<th>' + esc(d.name) + '</th>'; }).join('') + '</tr></thead><tbody>';
+  S.loadings.forEach(function (l, i) {
+    h += '<tr><td>' + esc(l.name) + '</td>' + S.dumpings.map(function (d, j) {
+      var v = D[l.name + '|' + d.name];
+      return '<td><input type="number" inputmode="decimal" step="0.1" min="0" data-mx="' + i + ',' + j + '" value="' + (v == null ? '' : v) + '"' + (v == null ? ' class="warn"' : '') + ' aria-label="Jarak ' + esc(l.name) + ' ke ' + esc(d.name) + '"></td>';
+    }).join('') + '</tr>';
+  });
+  return h + '</tbody></table></div>';
+}
+function viewLokasi() {
+  var mp = missingPairs(), h = '';
+  if (!UI.adding) h += '<div class="row"><button class="btn primary" data-act="addopen" data-type="l">+ Loading baru</button><button class="btn primary" data-act="addopen" data-type="d">+ Dumping baru</button></div>';
+  else h += addForm();
+  h += '<section class="card"><h2 class="sec-title">Lokasi loading</h2><ul class="loc-list">' + S.loadings.map(function (x) { return locRow('l', x); }).join('') + '</ul></section>';
+  h += '<section class="card"><h2 class="sec-title">Lokasi dumping</h2><ul class="loc-list">' + S.dumpings.map(function (x) { return locRow('d', x); }).join('') + '<li class="loc"><div><div class="nm">' + BD_LABEL + '</div><div class="sub">Bawaan. Jarak dihitung dari KM absolut loading ke KM titik BD.</div></div></li></ul></section>';
+  h += '<section class="card"><h2 class="sec-title">Matriks jarak (km)</h2><p class="small muted" style="margin:0 0 10px" id="mxinfo">' + (mp ? mp + ' pasangan belum punya jarak (kotak kuning).' : 'Semua pasangan sudah punya jarak.') + ' Ubah angka langsung di kotak, tersimpan otomatis.</p>' + matrixHtml() + '</section>';
+  return h;
+}
+function renameLoc(type, oldN, newN) {
+  if (oldN === newN) return;
+  S.dist.forEach(function (x) { if (type === 'l' && x.l === oldN) x.l = newN; if (type === 'd' && x.d === oldN) x.d = newN; });
+  Object.keys(S.periods).forEach(function (pk) { var dd = S.periods[pk].days; Object.keys(dd).forEach(function (n) { dd[n].slots.forEach(function (s) { if (type === 'l' && s.l === oldN) s.l = newN; if (type === 'd' && s.d === oldN) s.d = newN; if (type === 'd' && s.lj === oldN) s.lj = newN; }); }); });
+}
+function setDist(l, d, v) {
+  var f = S.dist.filter(function (x) { return x.l === l && x.d === d; })[0];
+  if (!isNum(v)) { if (f) S.dist.splice(S.dist.indexOf(f), 1); }
+  else if (f) f.km = +v; else S.dist.push({ l: l, d: d, km: +v });
+  rebuildDist();
+}
+
+/* ---------- GAJI ---------- */
+var GF = [
+  ['Nama lengkap', 'nama', 'text', 0, 'id'], ['ID / NIP', 'nip', 'text', 0, 'id'], ['Jabatan', 'jabatan', 'text', 0, 'id'], ['Nomor unit / dump truck', 'unit', 'text', 0, 'id'],
+  ['Lokasi kerja', 'lokasi', 'text', 0, 'id'], ['POH', 'poh', 'text', 0, 'id'], ['Status kerja', 'status', 'text', 0, 'id'],
+  ['Tarif ritase per KM (Rp)', 'tarif', 'number', 0, 'pay'], ['Gaji pokok per bulan (Rp)', 'gp', 'number', 0, 'pay'], ['Insentif kehadiran per bulan (Rp)', 'insentif', 'number', 0, 'pay'],
+  ['On site per hari (Rp)', 'onsite', 'number', 0, 'pay'], ['Hari dalam bulan (prorata)', 'hariBulan', 'number', 0, 'pay'], ['BPJS Kesehatan (%)', 'bpjsKes', 'number', 0, 'pay'],
+  ['BPJS Ketenagakerjaan JHT (%)', 'bpjsTk', 'number', 0, 'pay'],
+  ['Buka buku tanggal (1–31)', 'openDay', 'number', 0, 'book'], ['Tutup buku tanggal (1–31)', 'closeDay', 'number', 0, 'book'],
+  ['Travel allowance (isi manual, Rp)', 'travel', 'number', 1, 'per'], ['PPh 21 potongan (Rp, isi manual)', 'pphNominal', 'number', 1, 'per'], ['Potongan lain (Rp)', 'potLain', 'number', 1, 'per'], ['HK manual (kosong = otomatis)', 'hkOverride', 'number', 1, 'per']
+];
+function gfFields(g) {
+  return GF.filter(function (f) { return f[4] === g; }).map(function (f) {
+    var lk = LOCKED.indexOf(f[1]) >= 0;
+    return '<label class="f">' + f[0] + (lk ? ' <span class="lockbadge">Terkunci</span>' : '') + '<input id="g_' + f[1] + '" ' + (f[3] ? 'data-gp="' : 'data-g="') + f[1] + '" type="' + f[2] + '"' + (f[2] === 'number' ? ' inputmode="decimal" step="any"' : '') + ' value="' + esc(f[3] ? P()[f[1]] : S.settings[f[1]]) + '"' + (lk ? ' disabled class="locked"' : '') + '></label>';
+  }).join('');
+}
+function viewGaji() {
+  var h = '<section class="card"><h2 class="sec-title">Perkiraan gaji</h2><div class="seg" id="basis" style="margin-bottom:12px"><button data-basis="pdf" aria-pressed="' + (S.settings.kmBasis === 'pdf') + '">KM dari PDF</button><button data-basis="master" aria-pressed="' + (S.settings.kmBasis === 'master') + '">KM dari hitungan master</button></div><div id="gres"></div></section>';
+  h += '<p class="small muted" style="margin:0">Tarif, gaji pokok, potongan, dan HK manual diisi di tab Driver.</p>';
+  return h;
+}
+function viewDriver() {
+  var d = P(), hkAuto = autoHK(), rit = totals(1, N()).rit;
+  var h = '<section class="card"><h2 class="sec-title">Data driver</h2><p class="small muted" style="margin:0 0 10px">Nama, ID, dan nomor unit bisa diubah. Data lain terkunci sesuai offering letter PT. Citramegah Karunia Bersama (no. 271/OL/HR-GA/CKB-WBN/VIII/2026).</p><div class="grid2 stack">' + gfFields('id') + '</div></section>';
+  h += '<section class="card"><h2 class="sec-title">Gaji dan tunjangan</h2><div class="grid2 stack">' + gfFields('pay') + '</div><p class="small muted" style="margin:12px 0 0">Tarif dan tunjangan terkunci sesuai offering letter. Gaji pokok bisa diubah. PPh 21 diisi nominal (Rp) di isian periode; persen dihitung otomatis dari penghasilan kotor.</p></section>';
+  h += '<section class="card"><h2 class="sec-title">Aturan buku</h2><div class="grid2">' + gfFields('book') + '</div><p class="small muted" style="margin:12px 0 0">Dipakai saat membuat periode baru. Periode yang sudah ada tidak berubah.</p></section>';
+  h += '<section class="card"><h2 class="sec-title">Isian periode ini</h2><p class="small muted" style="margin:0 0 10px">' + periodTitle(d.start, d.end) + '. HK otomatis saat ini ' + hkAuto + ' hari.</p><div class="grid2 stack">' + gfFields('per') + '</div></section>';
+  h += '<section class="card"><h2 class="sec-title">Reset periode ini</h2><p class="small muted" style="margin:0 0 12px">Periode ' + periodTitle(d.start, d.end) + ' berisi ' + rit + ' ritase dan ' + hkAuto + ' hari kerja. Data driver, lokasi, dan periode lain tidak ikut terhapus.</p><div class="row"><button class="btn danger" data-act="resethk" data-label="Reset HK"' + (d.closed ? ' disabled' : '') + '>Reset HK</button><button class="btn danger" data-act="resetrekap" data-label="Reset rekapan"' + (d.closed ? ' disabled' : '') + '>Reset rekapan</button></div><p class="small muted" style="margin:10px 0 0">Reset HK menghapus pilihan shift dan HK manual. Reset rekapan menghapus semua isian slot (loading, dumping, KM, catatan). Ketuk dua kali untuk memastikan.' + (d.closed ? ' Buka kembali bukunya dulu untuk reset.' : '') + '</p></section>';
+  if (STANDALONE) h += '<section class="card"><h2 class="sec-title">Cadangan data</h2><p class="small muted" style="margin:0 0 12px">Data tersimpan di browser HP ini. Unduh cadangan secara berkala, atau sebelum ganti HP atau menghapus data browser. Cadangan berisi semua periode.</p><div class="row"><button class="btn primary" data-act="backup">Unduh cadangan</button><button class="btn" data-act="restore">Pulihkan dari file</button></div><input type="file" id="restoreFile" accept=".json,application/json" hidden></section>';
+  return h;
+}
+function gajiCalc() {
+  var s = S.settings, num = function (v) { return isNum(v) ? +v : 0; }, T = totals(1, N());
+  var pp = P(), hk = isNum(pp.hkOverride) ? +pp.hkOverride : autoHK(), hb = num(s.hariBulan) || 28;
+  var kmUse = s.kmBasis === 'pdf' && T.pdf ? T.pdf : T.km;
+  // Gaji pokok: prorata jika HK < hari bulan; jika HK >= hari bulan, tetap full (tidak naik)
+  var gpFull = num(s.gp);
+  var gp = hk >= hb ? gpFull : (hb ? gpFull / hb * hk : 0);
+  var ins = num(s.insentif) / (hb || 1) * Math.min(hk, hb);
+  var on = num(s.onsite) * hk, trv = num(pp.travel), rit = kmUse * num(s.tarif);
+  var kotor = gp + ins + on + trv + rit;
+  var tk = Math.round(gpFull * num(s.bpjsTk) / 100), kes = Math.round(gpFull * num(s.bpjsKes) / 100);
+  // PPh 21: isi nominal manual di periode; persen dihitung dari kotor
+  var pph = num(pp.pphNominal);
+  var pphPct = kotor > 0 ? (pph / kotor * 100) : 0;
+  var lain = num(pp.potLain);
+  var pot = tk + kes + pph + lain, thp = kotor - pot;
+  var klaimKm = (T.pdf && T.diff < 0) ? -T.diff : 0, klaim = klaimKm * num(s.tarif);
+  return { hk: hk, auto: autoHK(), hb: hb, kmUse: kmUse, basisPdf: s.kmBasis === 'pdf' && T.pdf > 0, gp: gp, gpFull: gpFull, gpCapped: hk >= hb, ins: ins, on: on, trv: trv, rit: rit, kotor: kotor, tk: tk, kes: kes, pph: pph, pphPct: pphPct, lain: lain, pot: pot, thp: thp, klaimKm: klaimKm, klaim: klaim, T: T, tarif: num(s.tarif) };
+}
+function updateGaji() {
+  var g = gajiCalc(), L = function (a, b, c) { return '<div class="ln' + (c ? ' ' + c : '') + '"><span>' + a + '</span><span class="num">' + b + '</span></div>'; };
+  var h = '<div class="pay"><h3>Penghasilan</h3>';
+  h += L('Hari kerja (HK)' + (isNum(P().hkOverride) ? ' manual' : ' otomatis dari shift'), g.hk + (g.hb ? ' / ' + g.hb : ''));
+  h += L('Gaji pokok' + (g.gpCapped ? ' (full, HK ≥ ' + g.hb + ')' : ' (prorata)'), rp(g.gp)) + L('Insentif kehadiran prorata', rp(g.ins)) + L('Tunjangan on site', rp(g.on)) + L('Travel allowance', rp(g.trv));
+  h += L('Tunjangan ritase (' + km(g.kmUse) + ' km × ' + rp(g.tarif) + ')', rp(g.rit));
+  h += L('Total penghasilan kotor', rp(g.kotor), 'sum');
+  var pphLabel = 'PPh 21' + (g.pph > 0 && g.kotor > 0 ? ' (' + (Math.round(g.pphPct * 100) / 100) + '% dari kotor)' : ' (isi nominal di tab Driver)');
+  h += '<h3>Potongan</h3>' + L('BPJS Ketenagakerjaan (JHT)', rp(g.tk)) + L('BPJS Kesehatan', rp(g.kes)) + L(pphLabel, rp(g.pph)) + L('Potongan lain', rp(g.lain)) + L('Total potongan', rp(g.pot), 'sum');
+  h += L('Take home', rp(g.thp), 'big');
+  h += '<h3>Klaim selisih KM</h3>';
+  if (g.klaimKm > 0) h += L('KM PDF kurang ' + km(g.klaimKm) + ' km dari hitungan', '+ ' + rp(g.klaim)) + L('Take home + klaim', rp(g.thp + g.klaim), 'sum');
+  else h += '<p class="small muted" style="margin:8px 0 0">' + (g.T.pdf ? 'KM PDF tidak lebih kecil dari hitungan master, jadi tidak ada klaim.' : 'Isi KM PDF di tab Catat untuk melihat selisih dan potensi klaim.') + '</p>';
+  h += '</div>';
+  var el = $('#gres'); if (el) el.innerHTML = h;
+}
+
+/* ---------- PETUNJUK ---------- */
+var APP_VER = 'v19';
+function viewBantu() {
+  var h = '<section class="card"><h2 class="sec-title">Cara memakai</h2><ol class="steps">';
+  [
+    ['Isi data driver', 'Buka tab Driver. Isi nama, NIP, jabatan, nomor unit, gaji, tarif per KM, dan potongan. Di bagian Aturan buku, isi Buka buku tanggal 29 dan Tutup buku tanggal 28 (atau sesuai aturan perusahaan). Tiap periode berjalan dari tanggal buka sampai tanggal tutup bulan berikutnya, jumlah harinya otomatis (28 sampai 31).'],
+    ['Pilih tanggal', 'Buka tab Catat. Ketuk tanggal di deretan atas, atau pakai tombol panah. Aplikasi membuka hari ini secara otomatis.'],
+    ['Pilih shift', 'Ketuk DS (Day Shift), NS (Night Shift), atau OFF. Jumlah hari kerja (HK) untuk gaji dihitung dari hari yang punya shift DS atau NS.'],
+    ['Isi tiap slot', 'Satu hari punya 3 slot. Pilih Loading dan Dumping, jarak langsung muncul. Satu slot lengkap sama dengan satu ritase.'],
+    ['Kalau breakdown di jalan', 'Pilih Dumping "BD di jalan", lalu isi KM titik BD (angka 1 sampai 70). Jarak dihitung dari selisih KM absolut loading dengan titik BD itu. Bila truk lanjut ke dumping setelah BD, pilih Lanjut ke dumping: jarak lanjutan (selisih KM titik BD dengan KM absolut dumping) ditambahkan ke total KM slot yang sama. Bila driver hanya melanjutkan (mengambil dump truck yang berhenti di KM 52 lalu dumping ke POS12), pilih Loading "Lanjutan BD (ambil di jalan)", isi KM titik ambil 52, dan pilih Dumping POS12: jarak = selisih KM 52 dengan KM absolut POS12.'],
+    ['Cocokkan dengan PDF', 'Isi KM PDF bila ada. Selisih (PDF dikurangi hitungan) muncul otomatis. Merah berarti PDF lebih kecil dari hitungan Anda.'],
+    ['Tambah lokasi sendiri', 'Buka tab Lokasi, ketuk "+ Loading baru" atau "+ Dumping baru". Isi nama dan jarak ke lokasi pasangannya. Lokasi baru langsung muncul di pilihan slot.'],
+    ['Lihat rekap', 'Buka tab Rekap untuk jumlah ritase per loading (misalnya TOS15 B), per dumping (POS12, FENI, dan lainnya), dan BD di jalan. Rentang tanggal bisa dipilih.'],
+    ['Cek gaji', 'Tab Gaji menghitung perkiraan take home dari HK dan total KM periode yang sedang dipilih, lengkap dengan potensi klaim selisih. HK, KM PDF, dan selisih otomatis dari catatan Anda.'],
+    ['Reset bila perlu', 'Di tab Driver, bagian Reset periode ini: Reset HK menghapus pilihan shift, Reset rekapan menghapus semua isian slot. Hanya berlaku untuk periode yang dipilih dan perlu diketuk dua kali.'],
+    ['Tutup buku dan buka periode baru', 'Setelah tanggal tutup dan semua catatan lengkap, ketuk Tutup buku di kotak Periode buku. Catatan periode itu dikunci. Ketuk Buka kembali bila perlu koreksi. Ketuk Periode berikutnya untuk pindah ke periode baru. Semua periode tiap bulan, mulai September \u2013 Oktober 2026, ada di daftar Periode buku dan bisa dipilih kapan saja.']
+  ].forEach(function (s) { h += '<li><div><h3>' + s[0] + '</h3><p>' + s[1] + '</p></div></li>'; });
+  h += '</ol></section>';
+  h += '<section class="card"><h2 class="sec-title">Aturan hitung</h2><ul class="rules">';
+  h += '<li>Ritase dihitung bila loading dan dumping sama-sama terisi. Slot yang baru terisi salah satunya ditandai "Belum lengkap" dan belum dihitung.</li>';
+  h += '<li>Jarak loading ke dumping diambil dari matriks jarak di tab Lokasi. Pasangan yang belum ada jaraknya ditandai kuning, isi langsung di slot atau di matriks.</li>';
+  h += '<li>Dumping "Parkiran Tofu" hanya menghitung jarak dari loading ke Parkiran Tofu (titik gantung), bukan ke POS12 atau FENI.</li>';
+  h += '<li>BD di jalan: jarak = selisih antara KM absolut loading dan KM titik BD. Loading harus punya KM absolut (isi lewat Ubah di tab Lokasi).</li>';
+  h += '<li>Ritase gaji = total KM × tarif per KM. Pilih dasar KM dari PDF atau dari hitungan master di tab Gaji.</li></ul></section>';
+  h += '<section class="card"><h2 class="sec-title">Penyimpanan data</h2><p style="margin:0;color:var(--muted);font-size:15px">' + (STANDALONE ? 'Setiap perubahan tersimpan otomatis di browser HP ini dan tetap bisa dipakai tanpa sinyal setelah halaman dibuka sekali. Jangan hapus data situs di pengaturan browser. Gunakan Unduh cadangan di tab Gaji secara berkala, dan Unduh CSV di tab Rekap untuk laporan.' : 'Setiap perubahan tersimpan otomatis. Label di pojok kanan atas menunjukkan statusnya. "Tersimpan di akun" berarti data ikut ke HP atau komputer lain yang membuka halaman ini dengan akun yang sama. "Tersimpan di perangkat ini" berarti data hanya ada di browser ini, jadi jangan hapus data situs. Gunakan Unduh CSV di tab Rekap untuk cadangan.') + '</p></section>';
+  h += '<section class="card"><h2 class="sec-title">Versi aplikasi</h2><p class="small muted" style="margin:0 0 ' + (STANDALONE ? '12' : '0') + 'px">Versi ' + APP_VER + '.' + (STANDALONE ? ' Bila tampilan belum berubah setelah file di GitHub diganti, ketuk Perbarui aplikasi. Data catatan tidak terhapus.' : '') + '</p>' + (STANDALONE ? '<button class="btn" data-act="update">Perbarui aplikasi</button>' : '') + '</section>';
+  return h;
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', function (e) {
+  var el = e.target.closest('button'); if (!el) return;
+  if (el.dataset.tab) { UI.tab = el.dataset.tab; saveUi(); render(); window.scrollTo(0, 0); return; }
+  if (el.dataset.day) { UI.day = +el.dataset.day; render(); return; }
+  if (el.dataset.nav) { UI.day = Math.min(30, Math.max(1, UI.day + +el.dataset.nav)); render(); window.scrollTo(0, 0); return; }
+  if (el.dataset.shift) { if (locked()) { toast('Buku periode ini ditutup'); return; } var d = getDay(UI.day, true); d.shift = d.shift === el.dataset.shift ? '' : el.dataset.shift; $$('#shift button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.shift === d.shift)); }); touch(); return; }
+  if (el.dataset.basis) { S.settings.kmBasis = el.dataset.basis; $$('#basis button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.basis === el.dataset.basis)); }); touch(); updateGaji(); return; }
+  if (el.dataset.addtype) { UI.draft.name = ($('#an') || {}).value || ''; UI.draft.abs = ($('#aa') || {}).value || ''; UI.adding = el.dataset.addtype; render(); return; }
+  var a = el.dataset.act; if (!a) return;
+  if (locked() && (a === 'copyprev' || a === 'clearday')) { toast('Buku periode ini ditutup'); return; }
+  if (a === 'copyprev') {
+    var prev = getDay(UI.day - 1); if (!prev) { toast('Hari sebelumnya masih kosong'); return; }
+    var cur = getDay(UI.day, true); cur.shift = prev.shift; cur.slots = prev.slots.map(function (s) { return { l: s.l, d: s.d, bd: s.bd, lj: s.lj || '', pdf: '', note: '' }; });
+    touch(); render(); toast('Slot disalin. KM PDF dikosongkan.');
+  } else if (a === 'clearday') {
+    if (el.dataset.sure !== '1') { el.dataset.sure = '1'; el.textContent = 'Ketuk lagi untuk mengosongkan'; setTimeout(function () { el.dataset.sure = ''; el.textContent = 'Kosongkan hari ini'; }, 3000); return; }
+    delete P().days[String(UI.day)]; touch(); render(); toast('Hari dikosongkan');
+  } else if (a === 'copyrekap') copyText(rekapText());
+  else if (a === 'csv') saveCsv();
+  else if (a === 'csvimport') { var cf = $('#csvFile'); if (cf) cf.click(); }
+  else if (a === 'closebook') {
+    if (el.dataset.sure !== '1') {
+      var inc = totals(1, N()).incomplete; el.dataset.sure = '1';
+      el.textContent = inc ? inc + ' slot belum lengkap. Ketuk lagi untuk tutup' : 'Ketuk lagi untuk menutup buku';
+      setTimeout(function () { el.dataset.sure = ''; el.textContent = 'Tutup buku'; }, 3500); return;
+    }
+    P().closed = true; P().closedAt = todayStr(); touch(); render(); toast('Buku periode ditutup');
+  }
+  else if (a === 'openbook') { P().closed = false; P().closedAt = ''; touch(); render(); toast('Buku dibuka kembali'); }
+  else if (a === 'newperiod') {
+    var ch = periodChain(), ix = -1; ch.forEach(function (q, n) { if (q.start === UI.cur) ix = n; });
+    var nx = ch[ix + 1]; if (!nx) { toast('Tidak ada periode berikutnya'); return; }
+    selectPeriod(nx.start); render(); window.scrollTo(0, 0); toast(periodTitle(nx.start, nx.end));
+  }
+  else if (a === 'resethk' || a === 'resetrekap') {
+    if (el.dataset.sure !== '1') { el.dataset.sure = '1'; el.textContent = 'Ketuk lagi untuk reset'; setTimeout(function () { el.dataset.sure = ''; el.textContent = el.dataset.label; }, 3500); return; }
+    var pd = P().days;
+    if (a === 'resethk') { Object.keys(pd).forEach(function (k) { pd[k].shift = ''; }); P().hkOverride = ''; toast('HK direset'); }
+    else { Object.keys(pd).forEach(function (k) { pd[k].slots = [blankSlot(), blankSlot(), blankSlot()]; }); toast('Rekapan direset'); }
+    touch(); render();
+  }
+  else if (a === 'backup') { downloadFile('cadangan-ritase-' + todayStr() + '.json', JSON.stringify(serialize()), 'application/json'); toast('Cadangan diunduh'); }
+  else if (a === 'update') {
+    var fin = function () { location.reload(); };
+    Promise.all([navigator.serviceWorker ? navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : 0, window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }) : 0]).then(fin, fin);
+  }
+  else if (a === 'restore') { var rf = $('#restoreFile'); if (rf) rf.click(); }
+  else if (a === 'addopen') { UI.adding = el.dataset.type; UI.draft = { name: '', abs: '' }; UI.edit = null; render(); }
+  else if (a === 'addcancel') { UI.adding = null; render(); }
+  else if (a === 'addsave') addSave();
+  else if (a === 'editloc') { var same = UI.edit && UI.edit.type === el.dataset.type && UI.edit.name === el.dataset.name; UI.edit = same ? null : { type: el.dataset.type, name: el.dataset.name, confirm: false }; UI.adding = null; render(); }
+  else if (a === 'canceledit') { UI.edit = null; render(); }
+  else if (a === 'saveloc') editSave();
+  else if (a === 'delloc') {
+    if (!UI.edit.confirm) { UI.edit.confirm = true; render(); return; }
+    var t = UI.edit.type, nm = UI.edit.name;
+    if (t === 'l') S.loadings = S.loadings.filter(function (x) { return x.name !== nm; }); else S.dumpings = S.dumpings.filter(function (x) { return x.name !== nm; });
+    S.dist = S.dist.filter(function (x) { return !(t === 'l' ? x.l === nm : x.d === nm); }); rebuildDist(); UI.edit = null; touch(); render(); toast('Lokasi dihapus');
+  }
+});
+function nameError(type, name, except) {
+  if (!name) return 'Nama lokasi belum diisi.';
+  if (/[|]/.test(name)) return 'Nama tidak boleh memakai tanda |.';
+  if (name === BD || name.toLowerCase() === BD_LABEL.toLowerCase() || name.toLowerCase() === LJB.toLowerCase()) return 'Nama itu sudah dipakai oleh bawaan.';
+  var list = type === 'l' ? S.loadings : S.dumpings;
+  if (list.some(function (x) { return x.name.toLowerCase() === name.toLowerCase() && x.name !== except; })) return 'Nama itu sudah ada di daftar.';
+  return '';
+}
+function addSave() {
+  var t = UI.adding, name = ($('#an').value || '').trim(), err = nameError(t, name, null), box = $('#aerr');
+  if (err) { box.textContent = err; box.hidden = false; return; }
+  var abs = $('#aa').value || '';
+  var opp = t === 'l' ? S.dumpings : S.loadings;
+  if (t === 'l') S.loadings.push({ name: name, abs: isNum(abs) ? +abs : '' }); else S.dumpings.push({ name: name, abs: isNum(abs) ? +abs : '' });
+  $$('[data-ad]').forEach(function (inp) {
+    var o = opp[+inp.dataset.ad]; if (!o || !isNum(inp.value)) return;
+    S.dist.push(t === 'l' ? { l: name, d: o.name, km: +inp.value } : { l: o.name, d: name, km: +inp.value });
+  });
+  rebuildDist(); UI.adding = null; UI.draft = { name: '', abs: '' }; touch(); render(); toast('Lokasi ditambahkan');
+}
+function editSave() {
+  var e = UI.edit, name = ($('#en').value || '').trim(), err = nameError(e.type, name, e.name);
+  if (err) { toast(err); return; }
+  var list = e.type === 'l' ? S.loadings : S.dumpings, obj = list.filter(function (x) { return x.name === e.name; })[0];
+  var a = $('#ea').value; obj.abs = isNum(a) ? +a : '';
+  renameLoc(e.type, e.name, name); obj.name = name; rebuildDist(); UI.edit = null; touch(); render(); toast('Perubahan disimpan');
+}
+document.addEventListener('change', function (e) {
+  var t = e.target;
+  if (t.id === 'pperiod') { selectPeriod(t.value); render(); window.scrollTo(0, 0); return; }
+  if (t.id === 'csvFile') {
+    var cfile = t.files && t.files[0]; if (!cfile) return;
+    var cr = new FileReader();
+    cr.onload = function () { try { importCsv(String(cr.result)); } catch (er) { UI.importMsg = 'Gagal membaca file CSV.'; render(); } };
+    cr.readAsText(cfile); t.value = ''; return;
+  }
+  if (t.id === 'restoreFile') {
+    var file = t.files && t.files[0]; if (!file) return;
+    var fr = new FileReader();
+    fr.onload = function () { try { var j = JSON.parse(String(fr.result)); if (!j || !j.loadings) throw 0; S = normalize(j); rebuildDist(); initUi(); touch(); render(); toast('Data dipulihkan'); } catch (x) { toast('File cadangan tidak valid'); } };
+    fr.readAsText(file); t.value = ''; return;
+  }
+  if (t.id === 'rf' || t.id === 'rt') {
+    UI.from = +$('#rf').value; UI.to = +$('#rt').value;
+    if (UI.from > UI.to) { if (t.id === 'rf') UI.to = UI.from; else UI.from = UI.to; }
+    render(); return;
+  }
+  var card = t.closest('.slot');
+  if (card && locked()) return;
+  if (card && (t.dataset.f === 'l' || t.dataset.f === 'd' || t.dataset.f === 'lj')) {
+    var i = +card.dataset.slot, n = UI.day; ensureShift(n);
+    var s = getDay(n, true).slots[i]; s[t.dataset.f] = t.value;
+    if (t.dataset.f === 'd' && t.value !== BD) { s.lj = ''; if (s.l !== LJB) s.bd = ''; }
+    if (t.dataset.f === 'l') { if (t.value === LJB && s.d === BD) { s.d = ''; s.lj = ''; } else if (t.value !== LJB && s.d !== BD) s.bd = ''; }
+    touch(); card.outerHTML = slotHtml(n, i); refreshSlotDerived(i);
+  }
+});
+document.addEventListener('input', function (e) {
+  var t = e.target, card = t.closest('.slot');
+  if (card && locked()) return;
+  if (card && t.dataset.f && t.dataset.f !== 'l' && t.dataset.f !== 'd' && t.dataset.f !== 'lj') {
+    var i = +card.dataset.slot, n = UI.day; ensureShift(n);
+    var s = getDay(n, true).slots[i];
+    if (t.dataset.f === 'dist') { if (s.l && s.d) setDist(s.l, s.d, t.value); }
+    else s[t.dataset.f] = t.value;
+    touch(); refreshSlotDerived(i); return;
+  }
+  if (t.dataset.mx) {
+    var p = t.dataset.mx.split(','), l = S.loadings[+p[0]], d = S.dumpings[+p[1]];
+    setDist(l.name, d.name, t.value); t.classList.toggle('warn', !isNum(t.value)); touch();
+    var mp = missingPairs(), inf = $('#mxinfo'); if (inf) inf.textContent = (mp ? mp + ' pasangan belum punya jarak (kotak kuning).' : 'Semua pasangan sudah punya jarak.') + ' Ubah angka langsung di kotak, tersimpan otomatis.';
+    return;
+  }
+  if (t.dataset.gp) { P()[t.dataset.gp] = t.value === '' ? '' : +t.value; touch(); updateGaji(); return; }
+  if (t.dataset.g) {
+    var k = t.dataset.g, num = ['tarif', 'gp', 'insentif', 'onsite', 'openDay', 'closeDay', 'hariBulan', 'bpjsKes', 'bpjsTk', 'pph'].indexOf(k) >= 0;
+    S.settings[k] = num ? (t.value === '' ? '' : +t.value) : t.value;
+    touch(); updateGaji();
+    if (k === 'nama' || k === 'jabatan' || k === 'lokasi') $('#sub').textContent = [S.settings.jabatan, S.settings.lokasi].filter(Boolean).join(' · ');
+  }
+});
+document.addEventListener('visibilitychange', async function () {
+  if (document.visibilityState !== 'visible' || !db || dirty || saving || !loaded) return;
+  var ae = document.activeElement; if (ae && /INPUT|SELECT|TEXTAREA/.test(ae.tagName)) return;
+  try {
+    var snap = await db.doc('app/main').get();
+    if (snap.exists && !dirty && snap.data().updated !== lastSaved) { S = normalize(snap.data()); lastSaved = snap.data().updated || ''; rebuildDist(); render(); }
+  } catch (e) {}
+});
+boot();
+if (STANDALONE && 'serviceWorker' in navigator && /^https?:/.test(location.protocol)) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); }); }
+})();
+</script>
