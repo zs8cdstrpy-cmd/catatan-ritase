@@ -1,4 +1,4 @@
-# Catatan Ritase (v29)
+# Catatan Ritase (v30)
 
 
 Aplikasi web untuk mencatat ritase harian dump truck: jarak loading ke dumping dihitung otomatis, ada rekap per loading dan dumping (termasuk BD di jalan), tambah lokasi sendiri, dan perkiraan gaji. Bisa dipakai tanpa sinyal setelah dibuka sekali.
@@ -27,3 +27,8 @@ Semua catatan tersimpan di browser HP masing-masing, tidak dikirim ke mana pun. 
 
 ## Konfigurasi kontrak (penting)
 Nilai gaji terkunci (tarif, gaji pokok, insentif, onsite, BPJS, PPh) diisi di objek `CONTRACT.fixed` di dalam `index.html`. Ganti angka sesuai offering letter. Nama & NIP bisa diisi di tab Driver.
+
+
+## Pembaruan v30
+- Tombol **Buat Slip Gaji** di tab Gaji: menghasilkan halaman slip mirip format PT. Citramegah Karunia Bersama (bisa dicetak / simpan PDF dari browser).
+- Slip berisi gaji pokok, tunjangan (onsite, insentif, ritase, travel), potongan (BPJS, PPh 21), rekap ritase harian, ringkasan HK, dan area tanda tangan.
