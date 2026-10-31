@@ -1,6 +1,6 @@
 // Service worker: simpan file aplikasi di HP supaya bisa dibuka tanpa sinyal.
 // Naikkan angka VERSI setiap kali file aplikasi diganti.
-var VERSI = 'ritase-v49';
+var VERSI = 'ritase-v50';
 var FILES = ['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(VERSI).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); }));
